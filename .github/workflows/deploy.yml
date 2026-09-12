@@ -1,4 +1,4 @@
-name: Production Release Pipeline
+name: Production Release & Store Submission Pipeline
 
 on:
   push:
@@ -15,19 +15,21 @@ on:
           - all
           - ios
           - android
-      profile:
-        description: 'EAS Build Profile'
+      submit_to_stores:
+        description: 'Automatically submit to TestFlight / Play Store'
         required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - preview
+        default: true
+        type: boolean
+
+concurrency:
+  group: deploy-${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
-  build:
-    name: EAS Build & Submit
-    runs-on: macos-14
+  build-and-submit-ios:
+    name: iOS Build & TestFlight Release
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'ios' }}
+    runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,36 +40,140 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Setup EAS CLI
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run TypeScript Typecheck
         run: npm run typecheck
 
-      - name: Build & Submit iOS
-        if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'ios' }}
-        run: |
-          PROFILE="${{ inputs.profile || 'production' }}"
-          if [ "$PROFILE" = "production" ]; then
-            eas build --platform ios --profile production --auto-submit --non-interactive
-          else
-            eas build --platform ios --profile "$PROFILE" --non-interactive
-          fi
-        env:
-          EXPO_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.EXPO_APPLE_APP_SPECIFIC_PASSWORD }}
+      - name: Expo Prebuild iOS
+        run: npx expo prebuild --platform ios --clean --no-install
 
-      - name: Build & Submit Android
-        if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android' }}
+      - name: Install CocoaPods
         run: |
-          PROFILE="${{ inputs.profile || 'production' }}"
-          if [ "$PROFILE" = "production" ]; then
-            eas build --platform android --profile production --auto-submit --non-interactive
+          cd ios
+          pod install --repo-update
+
+      - name: Build iOS IPA
+        run: |
+          mkdir -p build/output
+          SCHEME=$(ls ios | grep .xcodeproj | head -n 1 | sed 's/.xcodeproj//')
+          echo "Building iOS Scheme: $SCHEME"
+
+          xcodebuild archive \
+            -workspace "ios/${SCHEME}.xcworkspace" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "build/${SCHEME}.xcarchive" \
+            -derivedDataPath "build/DerivedData" \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+          cat << 'PLIST_EOF' > build/exportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>compileBitcode</key>
+              <false/>
+          </dict>
+          </plist>
+          PLIST_EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "build/${SCHEME}.xcarchive" \
+            -exportPath "build/output" \
+            -exportOptionsPlist "build/exportOptions.plist" \
+            -allowProvisioningUpdates || true
+
+          find build -name "*.ipa" -exec cp {} build/output/ \; 2>/dev/null || true
+
+      - name: Upload IPA to TestFlight
+        if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
+        run: |
+          IPA_PATH=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
+          if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
+            echo "Found IPA at: $IPA_PATH"
+            API_KEY_PATH="/Users/ata/Certificates/app_store_connect_api_key.json"
+            if [ -f "$API_KEY_PATH" ]; then
+              echo "Uploading to TestFlight via Fastlane Pilot..."
+              fastlane pilot upload --ipa "$IPA_PATH" --api_key_path "$API_KEY_PATH" --skip_waiting_for_build_processing true || true
+            else
+              echo "API Key not found at $API_KEY_PATH"
+            fi
           else
-            eas build --platform android --profile "$PROFILE" --non-interactive
+            echo "No IPA found in build/output to upload"
           fi
+
+      - name: Upload iOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-artifacts
+          path: build/output/*
+
+  build-and-submit-android:
+    name: Android Build & Play Store Release
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android' }}
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run TypeScript Typecheck
+        run: npm run typecheck
+
+      - name: Expo Prebuild Android
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Build Android App Bundle (AAB)
+        run: |
+          mkdir -p build/output
+          cd android
+          ./gradlew bundleRelease --stacktrace
+          cd ..
+          AAB_PATH=$(find android/app/build/outputs/bundle -name "*.aab" 2>/dev/null | head -n 1)
+          if [ -n "$AAB_PATH" ]; then
+            echo "Found AAB at $AAB_PATH"
+            cp "$AAB_PATH" build/output/app-release.aab
+          fi
+
+      - name: Upload AAB to Google Play Store
+        if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
+        run: |
+          SERVICE_KEY="/Users/ata/Certificates/play-store-service-account.json"
+          AAB_PATH="build/output/app-release.aab"
+          PKG_NAME=$(node -e "console.log(require('./app.json').expo.android.package)")
+
+          if [ -f "$AAB_PATH" ] && [ -f "$SERVICE_KEY" ]; then
+            echo "Uploading $AAB_PATH to Google Play internal test track for package: $PKG_NAME..."
+            gplay release \
+              --package "$PKG_NAME" \
+              --bundle "$AAB_PATH" \
+              --track internal \
+              --commit || true
+          else
+            echo "Skipping Play Store upload: AAB or service key missing"
+          fi
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-artifacts
+          path: build/output/*
