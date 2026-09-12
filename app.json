@@ -1,17 +1,24 @@
 {
   "expo": {
-    "name": "signpure",
+    "name": "SignPure",
     "slug": "signpure",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "signpure",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hushtunnel.signpure",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "SignPure uses Face ID / Touch ID to secure your signature vault and confidential documents."
+      }
     },
     "android": {
+      "package": "com.hushtunnel.signpure",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -20,6 +27,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
