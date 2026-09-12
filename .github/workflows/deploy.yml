@@ -4,9 +4,29 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Target Platform'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+      profile:
+        description: 'EAS Build Profile'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
 
 jobs:
-  build-and-submit:
+  build:
+    name: EAS Build & Submit
     runs-on: macos-14
     steps:
       - name: Checkout Code
@@ -28,12 +48,26 @@ jobs:
         run: npm ci
 
       - name: Run TypeScript Typecheck
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
-      - name: Build & Submit iOS App to TestFlight
-        run: eas build --platform ios --auto-submit --non-interactive
+      - name: Build & Submit iOS
+        if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'ios' }}
+        run: |
+          PROFILE="${{ inputs.profile || 'production' }}"
+          if [ "$PROFILE" = "production" ]; then
+            eas build --platform ios --profile production --auto-submit --non-interactive
+          else
+            eas build --platform ios --profile "$PROFILE" --non-interactive
+          fi
         env:
           EXPO_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.EXPO_APPLE_APP_SPECIFIC_PASSWORD }}
 
-      - name: Build & Submit Android App to Google Play
-        run: eas build --platform android --auto-submit --non-interactive
+      - name: Build & Submit Android
+        if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android' }}
+        run: |
+          PROFILE="${{ inputs.profile || 'production' }}"
+          if [ "$PROFILE" = "production" ]; then
+            eas build --platform android --profile production --auto-submit --non-interactive
+          else
+            eas build --platform android --profile "$PROFILE" --non-interactive
+          fi
