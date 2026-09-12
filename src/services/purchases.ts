@@ -2,8 +2,8 @@ import { Platform } from 'react-native';
 import Purchases, { PurchasesPackage } from 'react-native-purchases';
 
 const RC_API_KEY = Platform.select({
-  ios: process.env.EXPO_PUBLIC_RC_IOS_KEY || 'appl_OGyPDchOHYNtcZXcrpJSHAYDXsh',
-  android: process.env.EXPO_PUBLIC_RC_ANDROID_KEY || 'goog_MIYXZWKnxFUcBpvHPIqGukLSxUa',
+  ios: process.env.EXPO_PUBLIC_RC_IOS_KEY || 'appl_foHPlMuabYKiuPiMAEkiwHfcATV',
+  android: process.env.EXPO_PUBLIC_RC_ANDROID_KEY || 'goog_wGMjmCrRZVEpLLYQcxRiTlkXkMv',
 });
 
 let isInitialized = false;

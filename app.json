@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hushtunnel.signpure",
+      "bundleIdentifier": "com.altixcode.signpure",
       "buildNumber": "1",
       "infoPlist": {
         "NSFaceIDUsageDescription": "SignPure uses Face ID / Touch ID to secure your signature vault and confidential documents."
       }
     },
     "android": {
-      "package": "com.hushtunnel.signpure",
+      "package": "com.altixcode.signpure",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#030712",
