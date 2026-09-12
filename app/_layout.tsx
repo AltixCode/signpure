@@ -5,6 +5,7 @@ import { TouchableOpacity, Text } from 'react-native';
 import { Crown } from 'lucide-react-native';
 import { initPurchases, checkIsPro } from '../src/services/purchases';
 import { usePdfStore } from '../src/store/usePdfStore';
+import { t } from '../src/i18n';
 import '../global.css';
 
 export default function RootLayout() {
@@ -32,7 +33,7 @@ export default function RootLayout() {
                 className="bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full flex-row items-center"
               >
                 <Crown size={14} color="#F59E0B" />
-                <Text className="text-amber-400 text-xs font-bold ml-1.5">PRO</Text>
+                <Text className="text-amber-400 text-xs font-bold ml-1.5">{t('proBadge')}</Text>
               </TouchableOpacity>
             ) : null,
         }}
@@ -40,35 +41,28 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            title: 'SignPure',
+            title: t('appName'),
             headerTitleAlign: 'left',
-          }}
-        />
-        <Stack.Screen
-          name="viewer"
-          options={{
-            title: 'Document Viewer',
-            headerBackTitle: 'Back',
           }}
         />
         <Stack.Screen
           name="editor"
           options={{
-            title: 'Sign & Fill',
-            headerBackTitle: 'Back',
+            title: t('editorTitle'),
+            headerBackTitle: t('back'),
           }}
         />
         <Stack.Screen
           name="vault"
           options={{
-            title: 'Signature Vault',
-            headerBackTitle: 'Back',
+            title: t('vaultTitle'),
+            headerBackTitle: t('back'),
           }}
         />
         <Stack.Screen
           name="paywall"
           options={{
-            title: 'SignPure Pro',
+            title: t('paywallTitle'),
             presentation: 'modal',
           }}
         />

@@ -9,6 +9,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { RotateCcw, Check, X, PenTool } from 'lucide-react-native';
+import { t } from '../i18n';
 
 interface SignaturePadProps {
   onSave: (svgPath: string) => void;
@@ -59,7 +60,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
           <View className="bg-blue-500/20 p-2 rounded-xl mr-2">
             <PenTool size={16} color="#60A5FA" />
           </View>
-          <Text className="text-white font-bold text-base">Draw Signature</Text>
+          <Text className="text-white font-bold text-base">{t('drawSignature')}</Text>
         </View>
         <TouchableOpacity onPress={onCancel} className="p-1">
           <X size={18} color="#94A3B8" />
@@ -67,7 +68,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
       </View>
 
       <Text className="text-slate-400 text-xs mb-3">
-        Sign smoothly with your finger. Signatures stay securely stored on device.
+        {t('drawSignatureDesc')}
       </Text>
 
       {/* Touch Canvas */}
@@ -100,7 +101,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
         </Svg>
         {paths.length === 0 && !currentPath && (
           <View className="absolute items-center justify-center w-full pointer-events-none">
-            <Text className="text-slate-600 text-sm font-medium">Sign Here</Text>
+            <Text className="text-slate-600 text-sm font-medium">{t('signHere')}</Text>
           </View>
         )}
       </View>
@@ -112,7 +113,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
           className="bg-slate-800 px-4 py-3 rounded-xl flex-row items-center"
         >
           <RotateCcw size={14} color="#94A3B8" />
-          <Text className="text-slate-300 text-xs font-semibold ml-1.5">Clear</Text>
+          <Text className="text-slate-300 text-xs font-semibold ml-1.5">{t('clear')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -123,7 +124,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
           }`}
         >
           <Check size={16} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">Save to Vault</Text>
+          <Text className="text-white text-xs font-bold ml-1.5">{t('saveToVault')}</Text>
         </TouchableOpacity>
       </View>
     </View>

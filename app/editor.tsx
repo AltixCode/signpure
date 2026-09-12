@@ -25,6 +25,7 @@ import { usePdfStore, PlacedElement } from '../src/store/usePdfStore';
 import { exportSignedPdf } from '../src/engine/pdfEngine';
 import { FormFieldOverlay } from '../src/components/FormFieldOverlay';
 import { PaywallModal } from '../src/components/PaywallModal';
+import { t } from '../src/i18n';
 
 type ToolType = 'signature' | 'date' | 'text' | 'check';
 
@@ -68,7 +69,7 @@ export default function EditorScreen() {
       if (vaultSignatures.length > 0) {
         content = vaultSignatures[0].base64Png;
       } else {
-        content = 'Signature';
+        content = t('toolSign');
       }
       width = 130;
       height = 50;
@@ -78,7 +79,7 @@ export default function EditorScreen() {
       width = 90;
       height = 30;
     } else if (activeTool === 'text') {
-      content = 'Approved & Signed';
+      content = t('signatory');
       width = 140;
       height = 30;
     } else if (activeTool === 'check') {
@@ -103,7 +104,7 @@ export default function EditorScreen() {
 
   const handleExport = async () => {
     if (placedElements.length === 0) {
-      Alert.alert('No Signatures Placed', 'Please tap on the document to place a signature or stamp first.');
+      Alert.alert(t('noSignaturesPlaced'), t('noSignaturesPlacedDesc'));
       return;
     }
 
@@ -123,10 +124,10 @@ export default function EditorScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(exportedPath);
       } else {
-        Alert.alert('Document Exported', `Signed PDF saved to: ${exportedPath}`);
+        Alert.alert(t('documentExported'), t('savedTo', { path: exportedPath }));
       }
     } catch (err: any) {
-      Alert.alert('Export Error', err?.message || 'Failed to export signed PDF.');
+      Alert.alert(t('exportError'), err?.message || t('exportErrorDesc'));
     } finally {
       setIsExporting(false);
     }
@@ -143,7 +144,7 @@ export default function EditorScreen() {
             {document.name}
           </Text>
           <Text className="text-slate-400 text-[10px]">
-            Page {activePageIndex + 1} of {document.pageCount}
+            {t('pageOf', { current: activePageIndex + 1, total: document.pageCount })}
           </Text>
         </View>
 
@@ -181,7 +182,7 @@ export default function EditorScreen() {
           ) : (
             <>
               <Share2 size={14} color="#FFFFFF" />
-              <Text className="text-white font-bold text-xs ml-1.5">Export</Text>
+              <Text className="text-white font-bold text-xs ml-1.5">{t('export')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -207,10 +208,10 @@ export default function EditorScreen() {
 
             <View className="mt-8 pt-8 border-t border-slate-300 flex-row justify-between">
               <View className="w-40 border-b border-slate-400 pb-1">
-                <Text className="text-[10px] text-slate-400 uppercase font-mono">Signatory</Text>
+                <Text className="text-[10px] text-slate-400 uppercase font-mono">{t('signatory')}</Text>
               </View>
               <View className="w-24 border-b border-slate-400 pb-1">
-                <Text className="text-[10px] text-slate-400 uppercase font-mono">Date</Text>
+                <Text className="text-[10px] text-slate-400 uppercase font-mono">{t('date')}</Text>
               </View>
             </View>
           </View>
@@ -238,7 +239,7 @@ export default function EditorScreen() {
           }`}
         >
           <PenTool size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">Sign</Text>
+          <Text className="text-white text-xs font-bold ml-1.5">{t('toolSign')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -251,7 +252,7 @@ export default function EditorScreen() {
           }`}
         >
           <Calendar size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">Date</Text>
+          <Text className="text-white text-xs font-bold ml-1.5">{t('toolDate')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -264,7 +265,7 @@ export default function EditorScreen() {
           }`}
         >
           <Type size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">Text</Text>
+          <Text className="text-white text-xs font-bold ml-1.5">{t('toolText')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -277,7 +278,7 @@ export default function EditorScreen() {
           }`}
         >
           <CheckSquare size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">Check</Text>
+          <Text className="text-white text-xs font-bold ml-1.5">{t('toolCheck')}</Text>
         </TouchableOpacity>
       </View>
 

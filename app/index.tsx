@@ -17,6 +17,7 @@ import {
 import { usePdfStore } from '../src/store/usePdfStore';
 import { parsePdfMetadata } from '../src/engine/pdfEngine';
 import { PaywallModal } from '../src/components/PaywallModal';
+import { t } from '../src/i18n';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function HomeScreen() {
         router.push('/editor');
       }
     } catch (err: any) {
-      Alert.alert('Import Error', err?.message || 'Failed to parse PDF document.');
+      Alert.alert(t('importError'), err?.message || t('importErrorDesc'));
     } finally {
       setLoading(false);
     }
@@ -64,15 +65,14 @@ export default function HomeScreen() {
           <View className="inline-flex self-start bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full mb-3 flex-row items-center">
             <Sparkles size={12} color="#60A5FA" />
             <Text className="text-blue-400 text-xs font-semibold ml-1.5">
-              100% Offline PDF Workspace
+              {t('heroBadge')}
             </Text>
           </View>
           <Text className="text-3xl font-extrabold text-white tracking-tight">
-            Sign & Fill Contracts
+            {t('heroTitle')}
           </Text>
           <Text className="text-slate-400 text-sm mt-1.5 leading-relaxed">
-            Fill form fields, place vector signatures, and flatten confidential PDFs directly
-            on device. Never uploaded to the cloud.
+            {t('heroSubtitle')}
           </Text>
         </View>
 
@@ -88,7 +88,7 @@ export default function HomeScreen() {
                   {document.name}
                 </Text>
                 <Text className="text-slate-400 text-xs mt-0.5">
-                  {document.pageCount} {document.pageCount === 1 ? 'page' : 'pages'} • Ready to sign
+                  {t('pageOf', { current: 1, total: document.pageCount })}
                 </Text>
               </View>
             </View>
@@ -97,7 +97,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/editor')}
               className="bg-blue-600 py-3.5 px-4 rounded-xl flex-row items-center justify-center mt-2 shadow-lg shadow-blue-500/20"
             >
-              <Text className="text-white font-bold text-base mr-2">Open Sign Editor</Text>
+              <Text className="text-white font-bold text-base mr-2">{t('editorTitle')}</Text>
               <ArrowRight size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -116,14 +116,26 @@ export default function HomeScreen() {
                   <Upload size={36} color="#60A5FA" />
                 </View>
                 <Text className="text-white font-bold text-lg text-center mb-1">
-                  Import PDF to Sign
+                  {t('selectPdfPrompt')}
                 </Text>
                 <Text className="text-slate-400 text-xs text-center max-w-xs leading-relaxed">
-                  Select contracts, NDAs, lease agreements, or work orders from your files.
+                  {t('selectPdfDesc')}
                 </Text>
               </>
             )}
           </TouchableOpacity>
+        )}
+
+        {/* Free limit indicator */}
+        {!isPro && (
+          <View className="bg-slate-900/80 border border-slate-800/80 p-3 rounded-2xl mb-4 flex-row items-center justify-between">
+            <Text className="text-slate-400 text-xs">
+              {t('freeLimit', { count: documentsSignedCount, limit: FREE_MONTHLY_LIMIT })}
+            </Text>
+            <TouchableOpacity onPress={() => setPaywallVisible(true)}>
+              <Text className="text-amber-400 text-xs font-bold">{t('unlock')}</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Signature Vault Quick Access Card */}
@@ -137,9 +149,9 @@ export default function HomeScreen() {
               <Fingerprint size={20} color="#C084FC" />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-sm">Biometric Signature Vault</Text>
+              <Text className="text-white font-bold text-sm">{t('openVault')}</Text>
               <Text className="text-slate-400 text-xs mt-0.5">
-                Draw, store, and manage your reusable signatures with Face ID protection
+                {t('drawSignatureDesc')}
               </Text>
             </View>
           </View>
@@ -149,7 +161,7 @@ export default function HomeScreen() {
         {/* Privacy & Architectural Guarantees */}
         <View className="mt-4 space-y-3">
           <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-            Zero-Cloud Architecture
+            {t('archGuarantees')}
           </Text>
 
           <View className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex-row items-start mb-3">
@@ -157,10 +169,9 @@ export default function HomeScreen() {
               <ShieldCheck size={18} color="#60A5FA" />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-sm">In-Memory Binary Mutation</Text>
+              <Text className="text-white font-bold text-sm">{t('airGapped')}</Text>
               <Text className="text-slate-400 text-xs mt-0.5 leading-relaxed">
-                Operates strictly on raw Uint8Array buffers in RAM using pdf-lib. No intermediate
-                files or unencrypted cache leaks.
+                {t('airGappedDesc')}
               </Text>
             </View>
           </View>
@@ -170,10 +181,9 @@ export default function HomeScreen() {
               <PenTool size={18} color="#34D399" />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-sm">Destructive Flattening</Text>
+              <Text className="text-white font-bold text-sm">{t('vectorFlattening')}</Text>
               <Text className="text-slate-400 text-xs mt-0.5 leading-relaxed">
-                Burns stamps and signatures permanently into the base PDF stream so they cannot be
-                lifted or altered after export.
+                {t('vectorFlatteningDesc')}
               </Text>
             </View>
           </View>

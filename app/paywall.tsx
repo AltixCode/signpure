@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 import { usePdfStore } from '../src/store/usePdfStore';
 import { purchaseLifetime, restorePurchases } from '../src/services/purchases';
+import { t } from '../src/i18n';
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -31,10 +32,10 @@ export default function PaywallScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.back();
       } else {
-        setErrorMsg('Purchase was canceled or could not be completed.');
+        setErrorMsg(t('purchaseError'));
       }
     } catch {
-      setErrorMsg('An unexpected payment error occurred.');
+      setErrorMsg(t('unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -51,10 +52,10 @@ export default function PaywallScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.back();
       } else {
-        setErrorMsg('No prior purchases found to restore.');
+        setErrorMsg(t('noPriorPurchases'));
       }
     } catch {
-      setErrorMsg('Failed to restore purchases.');
+      setErrorMsg(t('restoreError'));
     } finally {
       setLoading(false);
     }
@@ -63,23 +64,23 @@ export default function PaywallScreen() {
   const features = [
     {
       icon: <FileSignature size={20} color="#38BDF8" />,
-      title: 'Unlimited Document Signing',
-      desc: 'Sign contracts, lease agreements, and NDAs with zero monthly quotas.',
+      title: t('feat1Title'),
+      desc: t('feat1Desc'),
     },
     {
       icon: <Fingerprint size={20} color="#A855F7" />,
-      title: 'Biometric Signature Vault',
-      desc: 'Store unlimited signatures, initials, and business seals locked with Face ID.',
+      title: t('feat2Title'),
+      desc: t('feat2Desc'),
     },
     {
       icon: <Layers size={20} color="#F59E0B" />,
-      title: 'Multi-PDF Merging & Reordering',
-      desc: 'Merge separate contracts, reorder pages, and flatten fields destructively.',
+      title: t('feat3Title'),
+      desc: t('feat3Desc'),
     },
     {
       icon: <ShieldCheck size={20} color="#10B981" />,
-      title: '100% Offline & Private',
-      desc: 'Never uploads confidential documents to external cloud servers.',
+      title: t('feat4Title'),
+      desc: t('feat4Desc'),
     },
   ];
 
@@ -91,7 +92,7 @@ export default function PaywallScreen() {
           <View className="bg-blue-500/20 p-2 rounded-xl mr-2.5">
             <Sparkles size={20} color="#60A5FA" />
           </View>
-          <Text className="text-xl font-extrabold text-white">SignPure Pro</Text>
+          <Text className="text-xl font-extrabold text-white">{t('paywallTitle')}</Text>
         </View>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -105,14 +106,13 @@ export default function PaywallScreen() {
         {/* Anti-Subscription Card */}
         <View className="bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-900/60 p-5 rounded-2xl mb-6">
           <Text className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">
-            Anti-Subscription Promise
+            {t('antiSubTitle')}
           </Text>
           <Text className="text-base font-bold text-white leading-snug">
-            No Subscriptions. No Accounts. 100% On-Device Privacy. Own It Forever.
+            {t('antiSubHeadline')}
           </Text>
           <Text className="text-slate-400 text-xs mt-2 leading-relaxed">
-            Other document signing apps charge $15–$25 every single month. SignPure is a single
-            one-time purchase that you keep forever across all your devices.
+            {t('antiSubDesc')}
           </Text>
         </View>
 
@@ -149,7 +149,7 @@ export default function PaywallScreen() {
           ) : (
             <>
               <Text className="text-white font-extrabold text-base mr-2">
-                Unlock Lifetime Access — $9.99
+                {t('lifetimeAccess')}
               </Text>
               <Check size={18} color="#FFFFFF" strokeWidth={3} />
             </>
@@ -158,10 +158,10 @@ export default function PaywallScreen() {
 
         <View className="flex-row items-center justify-center space-x-6 mt-4">
           <TouchableOpacity onPress={handleRestore} disabled={loading}>
-            <Text className="text-slate-400 text-xs underline">Restore Purchases</Text>
+            <Text className="text-slate-400 text-xs underline">{t('restorePurchases')}</Text>
           </TouchableOpacity>
           <Text className="text-slate-600 text-xs">•</Text>
-          <Text className="text-slate-500 text-xs">One-time payment. Never recurring.</Text>
+          <Text className="text-slate-500 text-xs">{t('oneTimePayment')}</Text>
         </View>
       </View>
     </View>

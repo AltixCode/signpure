@@ -19,6 +19,7 @@ import {
 } from 'lucide-react-native';
 import { usePdfStore } from '../store/usePdfStore';
 import { purchaseLifetime, restorePurchases } from '../services/purchases';
+import { t } from '../i18n';
 
 interface PaywallModalProps {
   visible: boolean;
@@ -41,10 +42,10 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onClose();
       } else {
-        setErrorMsg('Purchase was canceled or could not be completed.');
+        setErrorMsg(t('purchaseError'));
       }
     } catch {
-      setErrorMsg('An unexpected payment error occurred.');
+      setErrorMsg(t('unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -61,10 +62,10 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onClose();
       } else {
-        setErrorMsg('No prior purchases found to restore.');
+        setErrorMsg(t('noPriorPurchases'));
       }
     } catch {
-      setErrorMsg('Failed to restore purchases.');
+      setErrorMsg(t('restoreError'));
     } finally {
       setLoading(false);
     }
@@ -73,23 +74,23 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
   const features = [
     {
       icon: <FileSignature size={20} color="#38BDF8" />,
-      title: 'Unlimited Document Signing',
-      desc: 'Sign contracts, lease agreements, and work orders with zero monthly quotas.',
+      title: t('feat1Title'),
+      desc: t('feat1Desc'),
     },
     {
       icon: <Fingerprint size={20} color="#A855F7" />,
-      title: 'Biometric Signature Vault',
-      desc: 'Store unlimited signatures, initials, and business seals locked with Face ID.',
+      title: t('feat2Title'),
+      desc: t('feat2Desc'),
     },
     {
       icon: <Layers size={20} color="#F59E0B" />,
-      title: 'Multi-PDF Merging & Reordering',
-      desc: 'Merge separate contracts, delete pages, and flatten fields destructively.',
+      title: t('feat3Title'),
+      desc: t('feat3Desc'),
     },
     {
       icon: <ShieldCheck size={20} color="#10B981" />,
-      title: '100% Offline & Private',
-      desc: 'Never uploads confidential agreements to external cloud servers.',
+      title: t('feat4Title'),
+      desc: t('feat4Desc'),
     },
   ];
 
@@ -103,7 +104,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
               <View className="bg-blue-500/20 p-2 rounded-xl">
                 <Sparkles size={20} color="#60A5FA" />
               </View>
-              <Text className="text-xl font-extrabold text-white ml-2">SignPure Pro</Text>
+              <Text className="text-xl font-extrabold text-white ml-2">{t('paywallTitle')}</Text>
             </View>
             <TouchableOpacity
               onPress={onClose}
@@ -117,10 +118,10 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
           {/* Anti-Subscription Banner */}
           <View className="bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-900/60 p-4 rounded-2xl mb-5">
             <Text className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">
-              Anti-Subscription Promise
+              {t('antiSubTitle')}
             </Text>
             <Text className="text-sm font-semibold text-slate-100 leading-snug">
-              No Subscriptions. No Accounts. 100% On-Device Privacy. Own It Forever.
+              {t('antiSubHeadline')}
             </Text>
           </View>
 
@@ -155,7 +156,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
             ) : (
               <>
                 <Text className="text-white font-extrabold text-base mr-2">
-                  Unlock Lifetime Access — $9.99
+                  {t('lifetimeAccess')}
                 </Text>
                 <Check size={18} color="#FFFFFF" strokeWidth={3} />
               </>
@@ -165,10 +166,10 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
           {/* Restore & Policy Links */}
           <View className="flex-row items-center justify-center space-x-6 mt-4">
             <TouchableOpacity onPress={handleRestore} disabled={loading}>
-              <Text className="text-slate-400 text-xs underline">Restore Purchases</Text>
+              <Text className="text-slate-400 text-xs underline">{t('restorePurchases')}</Text>
             </TouchableOpacity>
             <Text className="text-slate-600 text-xs">•</Text>
-            <Text className="text-slate-500 text-xs">One-time payment. Never recurring.</Text>
+            <Text className="text-slate-500 text-xs">{t('oneTimePayment')}</Text>
           </View>
         </View>
       </View>

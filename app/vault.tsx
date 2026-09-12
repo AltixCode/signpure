@@ -15,6 +15,7 @@ import { usePdfStore, VaultSignature } from '../src/store/usePdfStore';
 import { authenticateWithBiometrics } from '../src/services/biometric';
 import { SignaturePad } from '../src/components/SignaturePad';
 import { PaywallModal } from '../src/components/PaywallModal';
+import { t } from '../src/i18n';
 
 export default function VaultScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function VaultScreen() {
         setIsUnlocked(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        Alert.alert('Authentication Failed', 'Biometric authentication is required to access the vault.');
+        Alert.alert(t('authFailed'), t('authFailedDesc'));
         router.back();
       }
     };
@@ -49,7 +50,7 @@ export default function VaultScreen() {
   const handleSaveSignature = (svgPath: string) => {
     const newSig: VaultSignature = {
       id: `sig_${Date.now()}`,
-      name: `Signature #${vaultSignatures.length + 1}`,
+      name: `${t('toolSign')} #${vaultSignatures.length + 1}`,
       base64Png: svgPath,
       createdAt: new Date().toISOString(),
     };
@@ -64,9 +65,9 @@ export default function VaultScreen() {
         <View className="bg-purple-500/20 p-5 rounded-full mb-4">
           <Fingerprint size={48} color="#C084FC" />
         </View>
-        <Text className="text-xl font-bold text-white text-center">Unlocking Vault...</Text>
+        <Text className="text-xl font-bold text-white text-center">{t('unlockingVault')}</Text>
         <Text className="text-slate-400 text-xs text-center mt-1">
-          Authenticating with Face ID / Touch ID
+          {t('authenticating')}
         </Text>
       </View>
     );
@@ -82,8 +83,8 @@ export default function VaultScreen() {
               <ShieldCheck size={18} color="#C084FC" />
             </View>
             <View>
-              <Text className="text-white font-bold text-base">Encrypted Vault</Text>
-              <Text className="text-emerald-400 text-xs font-medium">Biometrics Active</Text>
+              <Text className="text-white font-bold text-base">{t('encryptedVault')}</Text>
+              <Text className="text-emerald-400 text-xs font-medium">{t('biometricsActive')}</Text>
             </View>
           </View>
 
@@ -92,7 +93,7 @@ export default function VaultScreen() {
             className="bg-blue-600 px-3.5 py-2 rounded-xl flex-row items-center"
           >
             <Plus size={16} color="#FFFFFF" />
-            <Text className="text-white font-bold text-xs ml-1">New Signature</Text>
+            <Text className="text-white font-bold text-xs ml-1">{t('newSignature')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -111,10 +112,10 @@ export default function VaultScreen() {
           <View className="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-4 flex-row items-center justify-between">
             <View className="flex-1 mr-3">
               <Text className="text-slate-300 font-semibold text-xs">
-                Free Tier: {vaultSignatures.length}/1 Saved Signature
+                {t('freeTierNotice', { count: vaultSignatures.length })}
               </Text>
               <Text className="text-slate-500 text-[10px] mt-0.5">
-                Pro unlocks unlimited saved signatures, business stamps, and initials.
+                {t('freeTierDesc')}
               </Text>
             </View>
             <TouchableOpacity
@@ -122,28 +123,28 @@ export default function VaultScreen() {
               className="bg-amber-500/20 px-2.5 py-1.5 rounded-lg border border-amber-500/30 flex-row items-center"
             >
               <Lock size={12} color="#F59E0B" />
-              <Text className="text-amber-400 text-xs font-bold ml-1">Unlock</Text>
+              <Text className="text-amber-400 text-xs font-bold ml-1">{t('unlock')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Signatures List */}
         <Text className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-          Saved Signatures ({vaultSignatures.length})
+          {t('savedSignatures', { count: vaultSignatures.length })}
         </Text>
 
         {vaultSignatures.length > 0 ? (
           <View className="space-y-3">
-            {vaultSignatures.map((sig, idx) => (
+            {vaultSignatures.map((sig) => (
               <View
                 key={sig.id}
                 className="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-3 flex-row items-center justify-between"
               >
                 <View className="flex-1 mr-3">
                   <Text className="text-white font-bold text-sm">{sig.name}</Text>
-                  <Text className="text-blue-400 font-serif italic text-lg mt-1">✍️ Verified Sign</Text>
+                  <Text className="text-blue-400 font-serif italic text-lg mt-1">{t('verifiedSign')}</Text>
                   <Text className="text-slate-500 text-[10px] mt-1 font-mono">
-                    Created {new Date(sig.createdAt).toLocaleDateString()}
+                    {t('createdDate', { date: new Date(sig.createdAt).toLocaleDateString() })}
                   </Text>
                 </View>
 
@@ -162,10 +163,10 @@ export default function VaultScreen() {
         ) : (
           <View className="bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl p-8 items-center justify-center">
             <Text className="text-slate-400 text-sm font-medium text-center mb-1">
-              No Saved Signatures Yet
+              {t('noSavedSignatures')}
             </Text>
             <Text className="text-slate-500 text-xs text-center max-w-xs">
-              Tap "New Signature" above to draw and encrypt your official signature.
+              {t('noSavedSignaturesDesc')}
             </Text>
           </View>
         )}
