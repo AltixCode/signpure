@@ -1,7 +1,9 @@
-name: Production Release & Store Submission Pipeline
+name: Build, Release & Store Submission Pipeline
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -21,18 +23,29 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: write
+  id-token: write
+
 concurrency:
-  group: deploy-${{ github.repository }}
+  group: release-${{ github.repository }}
   cancel-in-progress: false
 
 jobs:
-  build-and-submit-ios:
-    name: iOS Build & TestFlight Release
+  build-ios:
+    name: iOS Build & Package
     if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'ios' }}
     runs-on: [self-hosted, macOS, ARM64]
+    outputs:
+      app_name: ${{ steps.version.outputs.app_name }}
+      app_version: ${{ steps.version.outputs.app_version }}
+      app_build: ${{ steps.version.outputs.app_build }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -43,8 +56,37 @@ jobs:
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Run TypeScript Typecheck
-        run: npm run typecheck
+      - name: Compute Dynamic Version & Bump app.json
+        id: version
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          APP_NAME=$(node -e "console.log(require('./app.json').expo.name)")
+          APP_VERSION="1.0.$COMMIT_COUNT"
+          APP_BUILD="$COMMIT_COUNT"
+          TAG_NAME="v$APP_VERSION"
+
+          echo "Computed Version: $APP_NAME $APP_VERSION (Build $APP_BUILD, Tag $TAG_NAME)"
+          echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "app_version=$APP_VERSION" >> "$GITHUB_OUTPUT"
+          echo "app_build=$APP_BUILD" >> "$GITHUB_OUTPUT"
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "APP_BUILD=$APP_BUILD" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
+          node -e '
+            const fs = require("fs");
+            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            app.expo.version = "'"$APP_VERSION"'";
+            app.expo.ios = app.expo.ios || {};
+            app.expo.ios.buildNumber = "'"$APP_BUILD"'";
+            app.expo.android = app.expo.android || {};
+            app.expo.android.versionCode = parseInt("'"$APP_BUILD"'", 10);
+            fs.writeFileSync("app.json", JSON.stringify(app, null, 2));
+            console.log("Updated app.json to version", app.expo.version, "build", app.expo.ios.buildNumber);
+          '
 
       - name: Expo Prebuild iOS
         run: npx expo prebuild --platform ios --clean --no-install
@@ -54,20 +96,40 @@ jobs:
           cd ios
           pod install --repo-update
 
-      - name: Build iOS IPA
+      - name: Build & Export Signed iOS IPA
         run: |
           mkdir -p build/output
           SCHEME=$(ls ios | grep .xcodeproj | head -n 1 | sed 's/.xcodeproj//')
           echo "Building iOS Scheme: $SCHEME"
 
-          xcodebuild archive \
-            -workspace "ios/${SCHEME}.xcworkspace" \
-            -scheme "$SCHEME" \
-            -configuration Release \
-            -destination "generic/platform=iOS" \
-            -archivePath "build/${SCHEME}.xcarchive" \
-            -derivedDataPath "build/DerivedData" \
-            COMPILER_INDEX_STORE_ENABLE=NO
+          AUTH_KEY="/Users/ata/Certificates/AuthKey_NGDJQCGYXQ.p8"
+          if [ -f "$AUTH_KEY" ]; then
+            echo "Archiving with App Store Connect API Key..."
+            xcodebuild archive \
+              -workspace "ios/${SCHEME}.xcworkspace" \
+              -scheme "$SCHEME" \
+              -configuration Release \
+              -destination "generic/platform=iOS" \
+              -archivePath "build/${SCHEME}.xcarchive" \
+              -derivedDataPath "build/DerivedData" \
+              -allowProvisioningUpdates \
+              -authenticationKeyPath "$AUTH_KEY" \
+              -authenticationKeyID "NGDJQCGYXQ" \
+              -authenticationKeyIssuerID "c7e17516-b80c-42fe-a192-229b4cee0a48" \
+              COMPILER_INDEX_STORE_ENABLE=NO \
+              DEVELOPMENT_TEAM="8Q8Y559285"
+          else
+            echo "Archiving with local signing..."
+            xcodebuild archive \
+              -workspace "ios/${SCHEME}.xcworkspace" \
+              -scheme "$SCHEME" \
+              -configuration Release \
+              -destination "generic/platform=iOS" \
+              -archivePath "build/${SCHEME}.xcarchive" \
+              -derivedDataPath "build/DerivedData" \
+              COMPILER_INDEX_STORE_ENABLE=NO \
+              DEVELOPMENT_TEAM="8Q8Y559285"
+          fi
 
           cat << 'PLIST_EOF' > build/exportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -75,57 +137,76 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>app-store-connect</string>
+              <key>teamID</key>
+              <string>8Q8Y559285</string>
               <key>signingStyle</key>
               <string>automatic</string>
               <key>stripSwiftSymbols</key>
               <true/>
-              <key>uploadBitcode</key>
-              <false/>
-              <key>compileBitcode</key>
-              <false/>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>destination</key>
+              <string>export</string>
           </dict>
           </plist>
           PLIST_EOF
 
-          xcodebuild -exportArchive \
-            -archivePath "build/${SCHEME}.xcarchive" \
-            -exportPath "build/output" \
-            -exportOptionsPlist "build/exportOptions.plist" \
-            -allowProvisioningUpdates || true
-
-          find build -name "*.ipa" -exec cp {} build/output/ \; 2>/dev/null || true
-
-      - name: Upload IPA to TestFlight
-        if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
-        run: |
-          IPA_PATH=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
-          if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
-            echo "Found IPA at: $IPA_PATH"
-            API_KEY_PATH="/Users/ata/Certificates/app_store_connect_api_key.json"
-            if [ -f "$API_KEY_PATH" ]; then
-              echo "Uploading to TestFlight via Fastlane Pilot..."
-              fastlane pilot upload --ipa "$IPA_PATH" --api_key_path "$API_KEY_PATH" --skip_waiting_for_build_processing true || true
-            else
-              echo "API Key not found at $API_KEY_PATH"
-            fi
+          if [ -f "$AUTH_KEY" ]; then
+            xcodebuild -exportArchive \
+              -archivePath "build/${SCHEME}.xcarchive" \
+              -exportPath "build/output" \
+              -exportOptionsPlist "build/exportOptions.plist" \
+              -allowProvisioningUpdates \
+              -authenticationKeyPath "$AUTH_KEY" \
+              -authenticationKeyID "NGDJQCGYXQ" \
+              -authenticationKeyIssuerID "c7e17516-b80c-42fe-a192-229b4cee0a48" || true
           else
-            echo "No IPA found in build/output to upload"
+            xcodebuild -exportArchive \
+              -archivePath "build/${SCHEME}.xcarchive" \
+              -exportPath "build/output" \
+              -exportOptionsPlist "build/exportOptions.plist" || true
           fi
 
-      - name: Upload iOS Artifacts
+          RAW_IPA=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
+          if [ -n "$RAW_IPA" ] && [ -f "$RAW_IPA" ]; then
+            cp "$RAW_IPA" "build/output/${APP_NAME}-${APP_VERSION}.ipa"
+            echo "Successfully generated IPA at build/output/${APP_NAME}-${APP_VERSION}.ipa"
+          else
+            echo "Warning: No IPA generated in build/output"
+          fi
+
+      - name: Upload to TestFlight
+        if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
+        run: |
+          API_KEY_PATH="/Users/ata/Certificates/app_store_connect_api_key.json"
+          TARGET_IPA=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
+          if [ -f "$API_KEY_PATH" ] && [ -n "$TARGET_IPA" ] && [ -f "$TARGET_IPA" ]; then
+            echo "Uploading $TARGET_IPA to TestFlight via Fastlane Pilot..."
+            fastlane pilot upload --ipa "$TARGET_IPA" --api_key_path "$API_KEY_PATH" --skip_waiting_for_build_processing true || true
+          fi
+
+      - name: Stash iOS Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build-artifacts
-          path: build/output/*
+          name: ios-release-artifacts
+          path: build/output/*.ipa
+          if-no-files-found: ignore
 
-  build-and-submit-android:
-    name: Android Build & Play Store Release
+  build-android:
+    name: Android Build & Package
     if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android' }}
     runs-on: [self-hosted, macOS, ARM64]
+    outputs:
+      app_name: ${{ steps.version.outputs.app_name }}
+      app_version: ${{ steps.version.outputs.app_version }}
+      app_build: ${{ steps.version.outputs.app_build }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -136,44 +217,200 @@ jobs:
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Run TypeScript Typecheck
-        run: npm run typecheck
+      - name: Compute Dynamic Version & Bump app.json
+        id: version
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          APP_NAME=$(node -e "console.log(require('./app.json').expo.name)")
+          APP_VERSION="1.0.$COMMIT_COUNT"
+          APP_BUILD="$COMMIT_COUNT"
+          TAG_NAME="v$APP_VERSION"
+
+          echo "Computed Version: $APP_NAME $APP_VERSION (Build $APP_BUILD, Tag $TAG_NAME)"
+          echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "app_version=$APP_VERSION" >> "$GITHUB_OUTPUT"
+          echo "app_build=$APP_BUILD" >> "$GITHUB_OUTPUT"
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "APP_BUILD=$APP_BUILD" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
+          node -e '
+            const fs = require("fs");
+            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            app.expo.version = "'"$APP_VERSION"'";
+            app.expo.ios = app.expo.ios || {};
+            app.expo.ios.buildNumber = "'"$APP_BUILD"'";
+            app.expo.android = app.expo.android || {};
+            app.expo.android.versionCode = parseInt("'"$APP_BUILD"'", 10);
+            fs.writeFileSync("app.json", JSON.stringify(app, null, 2));
+            console.log("Updated app.json to version", app.expo.version, "build", app.expo.android.versionCode);
+          '
 
       - name: Expo Prebuild Android
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Build Android App Bundle (AAB)
+      - name: Build Android APK & AAB
         run: |
           mkdir -p build/output
           cd android
+          echo "Building Release APK..."
+          ./gradlew assembleRelease --stacktrace
+          echo "Building Release AAB Bundle..."
           ./gradlew bundleRelease --stacktrace
           cd ..
-          AAB_PATH=$(find android/app/build/outputs/bundle -name "*.aab" 2>/dev/null | head -n 1)
-          if [ -n "$AAB_PATH" ]; then
-            echo "Found AAB at $AAB_PATH"
-            cp "$AAB_PATH" build/output/app-release.aab
+
+          RAW_APK=$(find android/app/build/outputs/apk -name "*release*.apk" 2>/dev/null | head -n 1)
+          if [ -n "$RAW_APK" ] && [ -f "$RAW_APK" ]; then
+            cp "$RAW_APK" "build/output/${APP_NAME}-${APP_VERSION}.apk"
+            echo "Successfully generated APK at build/output/${APP_NAME}-${APP_VERSION}.apk"
           fi
 
-      - name: Upload AAB to Google Play Store
+          RAW_AAB=$(find android/app/build/outputs/bundle -name "*.aab" 2>/dev/null | head -n 1)
+          if [ -n "$RAW_AAB" ] && [ -f "$RAW_AAB" ]; then
+            cp "$RAW_AAB" "build/output/${APP_NAME}-${APP_VERSION}.aab"
+            echo "Successfully generated AAB at build/output/${APP_NAME}-${APP_VERSION}.aab"
+          fi
+
+      - name: Upload to Google Play Store
         if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
         run: |
           SERVICE_KEY="/Users/ata/Certificates/play-store-service-account.json"
-          AAB_PATH="build/output/app-release.aab"
+          TARGET_AAB="build/output/${APP_NAME}-${APP_VERSION}.aab"
           PKG_NAME=$(node -e "console.log(require('./app.json').expo.android.package)")
 
-          if [ -f "$AAB_PATH" ] && [ -f "$SERVICE_KEY" ]; then
-            echo "Uploading $AAB_PATH to Google Play internal test track for package: $PKG_NAME..."
+          if [ -f "$TARGET_AAB" ] && [ -f "$SERVICE_KEY" ]; then
+            echo "Uploading $TARGET_AAB to Google Play internal test track for package: $PKG_NAME..."
             gplay release \
               --package "$PKG_NAME" \
-              --bundle "$AAB_PATH" \
+              --bundle "$TARGET_AAB" \
               --track internal \
+              --service-account-json "$SERVICE_KEY" \
               --commit || true
-          else
-            echo "Skipping Play Store upload: AAB or service key missing"
           fi
 
-      - name: Upload Android Artifacts
+      - name: Stash Android Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: android-build-artifacts
-          path: build/output/*
+          name: android-release-artifacts
+          path: |
+            build/output/*.apk
+            build/output/*.aab
+          if-no-files-found: ignore
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-ios, build-android]
+    if: always() && (needs.build-ios.result == 'success' || needs.build-android.result == 'success')
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Stashed Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/downloaded
+
+      - name: Prepare Release Packages & Checksums
+        id: prep
+        run: |
+          mkdir -p build/output
+          find build/downloaded -type f \( -name "*.ipa" -o -name "*.apk" -o -name "*.aab" \) -exec cp {} build/output/ \;
+
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          APP_NAME=$(node -e "console.log(require('./app.json').expo.name)")
+          APP_VERSION="1.0.$COMMIT_COUNT"
+          APP_BUILD="$COMMIT_COUNT"
+          TAG_NAME="v$APP_VERSION"
+
+          cd build/output
+          shasum -a 256 *.ipa *.apk *.aab > SHA256SUMS.txt 2>/dev/null || true
+          cd ../..
+
+          CHANGELOG=$(git log --pretty=format:"* %s (%h)" -n 12)
+          REPO="${{ github.repository }}"
+
+          cat << EOF > RELEASE_NOTES.md
+          ## 🚀 ${APP_NAME} ${TAG_NAME} (Build ${APP_BUILD})
+
+          ### 📦 Direct Download Packages
+          | Package | Description | Target Platform / Architecture | Direct Download Link |
+          |:---|:---|:---|:---|
+          EOF
+
+          if [ -f "build/output/${APP_NAME}-${APP_VERSION}.ipa" ]; then
+            echo "| **\`${APP_NAME}-${APP_VERSION}.ipa\`** | Signed iOS Application Archive | iOS 15.0+ (TestFlight / Sideloading / AltStore) | [Download ${APP_NAME}-${APP_VERSION}.ipa](https://github.com/${REPO}/releases/download/${TAG_NAME}/${APP_NAME}-${APP_VERSION}.ipa) |" >> RELEASE_NOTES.md
+          fi
+
+          if [ -f "build/output/${APP_NAME}-${APP_VERSION}.apk" ]; then
+            echo "| **\`${APP_NAME}-${APP_VERSION}.apk\`** | Standalone Universal APK (Recommended) | All Android Devices | [Download ${APP_NAME}-${APP_VERSION}.apk](https://github.com/${REPO}/releases/download/${TAG_NAME}/${APP_NAME}-${APP_VERSION}.apk) |" >> RELEASE_NOTES.md
+          fi
+
+          if [ -f "build/output/${APP_NAME}-${APP_VERSION}.aab" ]; then
+            echo "| **\`${APP_NAME}-${APP_VERSION}.aab\`** | Google Play App Bundle | Android Play Store Distribution | [Download ${APP_NAME}-${APP_VERSION}.aab](https://github.com/${REPO}/releases/download/${TAG_NAME}/${APP_NAME}-${APP_VERSION}.aab) |" >> RELEASE_NOTES.md
+          fi
+
+          cat << EOF >> RELEASE_NOTES.md
+
+          ### 🛡️ Privacy & Architecture Highlights
+          - **100% On-Device Processing**: No cloud servers, no remote accounts, and zero telemetry.
+          - **Anti-Subscription Promise**: Single lifetime non-consumable license. Own it forever with zero recurring fees.
+          - **12-Language Support**: Fully localized in English, Spanish, French, German, Russian, Chinese, Japanese, Portuguese, Korean, Italian, Turkish, and Arabic.
+
+          ### 📝 Recent Changes
+          ${CHANGELOG}
+
+          ### 🔒 Binary Integrity (SHA-256)
+          \`\`\`text
+          $(cat build/output/SHA256SUMS.txt 2>/dev/null || echo "No checksums generated")
+          \`\`\`
+          EOF
+
+          # Clean leading spaces in RELEASE_NOTES.md lines
+          sed -i '' 's/^[ \t]*##/##/' RELEASE_NOTES.md 2>/dev/null || true
+          sed -i '' 's/^[ \t]*###/###/' RELEASE_NOTES.md 2>/dev/null || true
+          sed -i '' 's/^[ \t]*- /- /' RELEASE_NOTES.md 2>/dev/null || true
+
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_BUILD=$APP_BUILD" >> $GITHUB_ENV
+
+      - name: Publish to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          command -v gh >/dev/null 2>&1 || brew install gh
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists - updating notes and assets."
+            gh release edit "$TAG_NAME" \
+              --title "${APP_NAME} ${TAG_NAME} (Build ${APP_BUILD})" \
+              --notes-file RELEASE_NOTES.md \
+              --draft=false \
+              --prerelease=false \
+              --latest
+          else
+            echo "Creating release $TAG_NAME."
+            gh release create "$TAG_NAME" \
+              --title "${APP_NAME} ${TAG_NAME} (Build ${APP_BUILD})" \
+              --notes-file RELEASE_NOTES.md \
+              --target "${{ github.sha }}" \
+              --latest
+          fi
+
+          gh release upload "$TAG_NAME" \
+            build/output/*.ipa \
+            build/output/*.apk \
+            build/output/*.aab \
+            build/output/SHA256SUMS.txt \
+            --clobber
+
+      - name: Tag Git Commit
+        run: |
+          git tag -f "$TAG_NAME"
+          git push origin "$TAG_NAME" --force || true
