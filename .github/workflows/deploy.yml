@@ -47,10 +47,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js 20
+      - name: Clean Workspace
+        run: rm -rf build ios android
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
@@ -208,10 +211,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js 20
+      - name: Clean Workspace
+        run: rm -rf build ios android
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
@@ -249,11 +255,20 @@ jobs:
             console.log("Updated app.json to version", app.expo.version, "build", app.expo.android.versionCode);
           '
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Expo Prebuild Android
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Build Android APK & AAB
+        env:
+          JAVA_HOME: /opt/homebrew/opt/openjdk@17
         run: |
+          export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
           mkdir -p build/output
           cd android
           echo "Building Release APK..."
@@ -403,12 +418,19 @@ jobs:
               --latest
           fi
 
-          gh release upload "$TAG_NAME" \
-            build/output/*.ipa \
-            build/output/*.apk \
-            build/output/*.aab \
-            build/output/SHA256SUMS.txt \
-            --clobber
+          FILES=()
+          for f in build/output/*.ipa build/output/*.apk build/output/*.aab build/output/SHA256SUMS.txt; do
+            if [ -f "$f" ]; then
+              FILES+=("$f")
+            fi
+          done
+
+          if [ ${#FILES[@]} -gt 0 ]; then
+            echo "Uploading ${#FILES[@]} artifacts to release $TAG_NAME..."
+            gh release upload "$TAG_NAME" "${FILES[@]}" --clobber
+          else
+            echo "Warning: No release artifacts found to upload."
+          fi
 
       - name: Tag Git Commit
         run: |
