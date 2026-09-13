@@ -22,6 +22,18 @@ on:
         required: true
         default: true
         type: boolean
+      ios_runner:
+        description: 'iOS runner (self-hosted first; hosted is backup)'
+        required: true
+        default: 'self-hosted'
+        type: choice
+        options: [self-hosted, github-hosted]
+      android_runner:
+        description: 'Android runner (self-hosted first; hosted is backup)'
+        required: true
+        default: 'self-hosted'
+        type: choice
+        options: [self-hosted, github-hosted]
 
 permissions:
   contents: write
@@ -35,7 +47,7 @@ jobs:
   build-ios:
     name: iOS Build & Package
     if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'ios' }}
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_runner == 'github-hosted' && 'macos-14' || fromJSON('["self-hosted", "macOS", "ARM64"]') }}
     outputs:
       app_name: ${{ steps.version.outputs.app_name }}
       app_version: ${{ steps.version.outputs.app_version }}
@@ -198,9 +210,8 @@ jobs:
 
   build-android:
     name: Android Build & Package
-    if: ${{ always() && (github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android') && (needs.build-ios.result == 'success' || inputs.platform == 'android') }}
-    needs: build-ios
-    runs-on: [self-hosted, linux, x64]
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android' }}
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.android_runner == 'github-hosted' && 'ubuntu-24.04' || fromJSON('["self-hosted", "linux", "x64"]') }}
     outputs:
       app_name: ${{ steps.version.outputs.app_name }}
       app_version: ${{ steps.version.outputs.app_version }}
