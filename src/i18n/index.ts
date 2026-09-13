@@ -32,6 +32,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
 export const translations = {
   "en": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "The signature could not be saved. Please draw it again.",
     "lifetimeAccess": "Unlock Lifetime Access — $9.99",
     "restorePurchases": "Restore Purchases",
     "oneTimePayment": "One-time payment. Never recurring.",
@@ -112,6 +113,7 @@ export const translations = {
   },
   "es": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "No se pudo guardar la firma. Vuelve a dibujarla.",
     "lifetimeAccess": "Desbloquear Acceso Vitalicio — $9.99",
     "restorePurchases": "Restaurar Compras",
     "oneTimePayment": "Pago único. Nunca recurrente.",
@@ -192,6 +194,7 @@ export const translations = {
   },
   "fr": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "La signature n'a pas pu être enregistrée. Veuillez la redessiner.",
     "lifetimeAccess": "Débloquer l'Accès à Vie — 9,99 $",
     "restorePurchases": "Restaurer les Achats",
     "oneTimePayment": "Paiement unique. Jamais récurrent.",
@@ -272,6 +275,7 @@ export const translations = {
   },
   "de": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "Die Unterschrift konnte nicht gespeichert werden. Bitte zeichne sie erneut.",
     "lifetimeAccess": "Lebenslangen Zugriff Freischalten — 9,99 $",
     "restorePurchases": "Käufe Wiederherstellen",
     "oneTimePayment": "Einmalzahlung. Kein Abonnement.",
@@ -352,6 +356,7 @@ export const translations = {
   },
   "ru": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "Не удалось сохранить подпись. Нарисуйте её ещё раз.",
     "lifetimeAccess": "Разблокировать Навсегда — $9.99",
     "restorePurchases": "Восстановить Покупки",
     "oneTimePayment": "Разовый платеж. Без подписок.",
@@ -432,6 +437,7 @@ export const translations = {
   },
   "zh": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "无法保存签名，请重新绘制。",
     "lifetimeAccess": "解锁永久买断版 — $9.99",
     "restorePurchases": "恢复购买",
     "oneTimePayment": "一次性付款，永无续费。",
@@ -512,6 +518,7 @@ export const translations = {
   },
   "ja": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "署名を保存できませんでした。もう一度描いてください。",
     "lifetimeAccess": "買い切り版を解除 — $9.99",
     "restorePurchases": "購入を復元",
     "oneTimePayment": "1回限りの買い切り。追加請求なし。",
@@ -592,6 +599,7 @@ export const translations = {
   },
   "pt": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "Não foi possível salvar a assinatura. Desenhe novamente.",
     "lifetimeAccess": "Desbloquear Acesso Vitalício — $9.99",
     "restorePurchases": "Restaurar Compras",
     "oneTimePayment": "Pagamento único. Sem recorrência.",
@@ -672,6 +680,7 @@ export const translations = {
   },
   "ko": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "서명을 저장하지 못했습니다. 다시 그려 주세요.",
     "lifetimeAccess": "평생 이용권 잠금 해제 — $9.99",
     "restorePurchases": "구매 내역 복원",
     "oneTimePayment": "1회 결제. 정기 구독 없음.",
@@ -752,6 +761,7 @@ export const translations = {
   },
   "it": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "Non è stato possibile salvare la firma. Disegnala di nuovo.",
     "lifetimeAccess": "Sblocca Accesso a Vita — $9.99",
     "restorePurchases": "Ripristina Acquisti",
     "oneTimePayment": "Pagamento una tantum. Nessun abbonamento.",
@@ -832,6 +842,7 @@ export const translations = {
   },
   "tr": {
     "proBadge": "PRO",
+    "signatureSaveFailed": "İmza kaydedilemedi. Lütfen yeniden çizin.",
     "lifetimeAccess": "Ömür Boyu Erişimi Aç — $9.99",
     "restorePurchases": "Satın Alımları Geri Yükle",
     "oneTimePayment": "Tek seferlik ödeme. Asla abonelik yok.",
@@ -912,6 +923,7 @@ export const translations = {
   },
   "ar": {
     "proBadge": "احترافي",
+    "signatureSaveFailed": "تعذّر حفظ التوقيع. يُرجى رسمه مرة أخرى.",
     "lifetimeAccess": "فتح الوصول مدى الحياة — $9.99",
     "restorePurchases": "استعادة المشتريات",
     "oneTimePayment": "دفعة واحدة فقط. بدون اشتراكات متكررة.",

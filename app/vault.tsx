@@ -15,11 +15,14 @@ import { usePdfStore, VaultSignature } from '../src/store/usePdfStore';
 import { authenticateWithBiometrics } from '../src/services/biometric';
 import { SignaturePad } from '../src/components/SignaturePad';
 import { PaywallModal } from '../src/components/PaywallModal';
+import { useSignatureRasterizer } from '../src/engine/signatureRasterizer';
 import { t } from '../src/i18n';
 
 export default function VaultScreen() {
   const router = useRouter();
   const { vaultSignatures, isPro, addVaultSignature, removeVaultSignature } = usePdfStore();
+
+  const { RasterizerPortal, rasterize } = useSignatureRasterizer();
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -47,16 +50,28 @@ export default function VaultScreen() {
     setIsDrawing(true);
   };
 
-  const handleSaveSignature = (svgPath: string) => {
-    const newSig: VaultSignature = {
-      id: `sig_${Date.now()}`,
-      name: `${t('toolSign')} #${vaultSignatures.length + 1}`,
-      base64Png: svgPath,
-      createdAt: new Date().toISOString(),
-    };
-    addVaultSignature(newSig);
-    setIsDrawing(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const handleSaveSignature = async (svgPath: string) => {
+    // The drawn path has to become a real PNG here. Storing the SVG string in
+    // `base64Png` made every export call embedPng on it, which threw and was
+    // swallowed by a catch that only logged — so signatures never reached the
+    // exported PDF while the app reported success.
+    try {
+      const base64Png = await rasterize(svgPath);
+      addVaultSignature({
+        id: `sig_${Date.now()}`,
+        name: `${t('toolSign')} #${vaultSignatures.length + 1}`,
+        base64Png,
+        createdAt: new Date().toISOString(),
+      });
+      setIsDrawing(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        t('error'),
+        (error as { message?: string })?.message ?? t('signatureSaveFailed'),
+      );
+    }
   };
 
   if (!isUnlocked) {
@@ -74,6 +89,8 @@ export default function VaultScreen() {
   }
 
   return (
+    <>
+      {RasterizerPortal}
     <View className="flex-1 bg-slate-950 px-5 py-4">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Top Vault Status */}
@@ -175,5 +192,6 @@ export default function VaultScreen() {
       {/* Embedded Paywall Modal */}
       <PaywallModal visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
     </View>
+    </>
   );
 }
