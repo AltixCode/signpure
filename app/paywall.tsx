@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
 import {
   Sparkles,
   FileSignature,
@@ -13,54 +14,14 @@ import {
   X,
 } from 'lucide-react-native';
 import { usePdfStore } from '../src/store/usePdfStore';
-import { purchaseLifetime, restorePurchases } from '../src/services/purchases';
+import { usePaywall } from '../src/hooks/usePaywall';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '../src/config/legal';
 import { t } from '../src/i18n';
 
 export default function PaywallScreen() {
   const router = useRouter();
-  const { setIsPro } = usePdfStore();
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const handlePurchase = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const success = await purchaseLifetime();
-      if (success) {
-        setIsPro(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.back();
-      } else {
-        setErrorMsg(t('purchaseError'));
-      }
-    } catch {
-      setErrorMsg(t('unexpectedError'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRestore = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const success = await restorePurchases();
-      if (success) {
-        setIsPro(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.back();
-      } else {
-        setErrorMsg(t('noPriorPurchases'));
-      }
-    } catch {
-      setErrorMsg(t('restoreError'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { ctaLabel, loading, errorMsg, handlePurchase, handleRestore } =
+    usePaywall(() => router.back());
 
   const features = [
     {
@@ -109,7 +70,7 @@ export default function PaywallScreen() {
             colors={['rgba(23,37,84,0.8)', '#0F172A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="border border-blue-900/60 p-5 rounded-2xl mb-6"
+            style={{ borderWidth: 1, borderColor: 'rgba(30,58,138,0.6)', padding: 20, borderRadius: 16, marginBottom: 24 }}
           >
           <Text className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">
             {t('antiSubTitle')}
@@ -155,7 +116,7 @@ export default function PaywallScreen() {
           ) : (
             <>
               <Text className="text-white font-extrabold text-base mr-2">
-                {t('lifetimeAccess')}
+                {ctaLabel}
               </Text>
               <Check size={18} color="#FFFFFF" strokeWidth={3} />
             </>
@@ -169,6 +130,27 @@ export default function PaywallScreen() {
           <Text className="text-slate-600 text-xs">•</Text>
           <Text className="text-slate-500 text-xs">{t('oneTimePayment')}</Text>
         </View>
+        <View className="mt-3 flex-row items-center justify-center gap-5">
+          <TouchableOpacity
+            onPress={() => Linking.openURL(TERMS_OF_USE_URL)}
+            accessibilityRole="link"
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+          >
+            <Text className="text-xs text-slate-500 underline">
+              {t('termsOfUse')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+            accessibilityRole="link"
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+          >
+            <Text className="text-xs text-slate-500 underline">
+              {t('privacyPolicy')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
       </View>
     </View>
   );

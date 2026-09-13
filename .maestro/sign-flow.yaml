@@ -1,0 +1,35 @@
+appId: com.altixcode.signpure
+name: Sign a document end to end
+---
+# Drives the real signing journey against an A4 fixture whose signature rule
+# sits at a known position (y=200, x 60-300 in PDF points), so the exported file
+# can be checked for a mark in the right place rather than eyeballed.
+#
+# Selectors wrap in .* because iOS composes one accessibility label per
+# pressable from all of its child Text nodes.
+- launchApp:
+    clearState: false
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Cancel"
+- assertVisible: "Private Document Signing"
+- takeScreenshot: artifacts/01-home
+
+# The paywall must not be able to open itself: headerRight used to be inherited
+# from screenOptions by every route, including the paywall.
+- tapOn: ".*PRO.*"
+- extendedWaitUntil:
+    visible: ".*Anti-Subscription.*"
+    timeout: 20000
+- takeScreenshot: artifacts/02-paywall
+- assertNotVisible: ".*PRO.*"
+- tapOn: ".*Cancel.*"
+
+# Draw a signature into the vault first; placing one without it is now blocked.
+- tapOn: ".*Signature Vault.*"
+- extendedWaitUntil:
+    visible: ".*(New Signature|Add Signature|Draw).*"
+    timeout: 25000
+- takeScreenshot: artifacts/03-vault

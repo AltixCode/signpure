@@ -21,8 +21,10 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react-native';
-import { usePdfStore, PlacedElement } from '../src/store/usePdfStore';
+import { usePdfStore } from '../src/store/usePdfStore';
 import { exportSignedPdf } from '../src/engine/pdfEngine';
+import { screenToPdfCoordinates, ViewportTransform } from '../src/engine/coordinateMath';
+import { PdfPageCanvas, CanvasGeometry } from '../src/components/PdfPageCanvas';
 import { FormFieldOverlay } from '../src/components/FormFieldOverlay';
 import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
@@ -44,6 +46,7 @@ export default function EditorScreen() {
   } = usePdfStore();
 
   const [activeTool, setActiveTool] = useState<ToolType>('signature');
+  const [geometry, setGeometry] = useState<CanvasGeometry | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [paywallVisible, setPaywallVisible] = useState(false);
 
@@ -57,7 +60,10 @@ export default function EditorScreen() {
     height: 792,
   };
 
-  const handleCanvasTap = (evt: GestureResponderEvent) => {
+  const handleCanvasTap = (
+    evt: GestureResponderEvent,
+    geometry: CanvasGeometry,
+  ) => {
     const { locationX, locationY } = evt.nativeEvent;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -69,13 +75,13 @@ export default function EditorScreen() {
       if (vaultSignatures.length > 0) {
         content = vaultSignatures[0].base64Png;
       } else {
-        content = t('toolSign');
+        Alert.alert(t('noSignatureYet'), t('noSignatureYetDesc'));
+        return;
       }
       width = 130;
       height = 50;
     } else if (activeTool === 'date') {
-      const now = new Date();
-      content = now.toISOString().split('T')[0];
+      content = new Date().toISOString().split('T')[0];
       width = 90;
       height = 30;
     } else if (activeTool === 'text') {
@@ -83,23 +89,47 @@ export default function EditorScreen() {
       width = 140;
       height = 30;
     } else if (activeTool === 'check') {
-      content = '✓';
+      content = '\u2713';
       width = 30;
       height = 30;
     }
 
-    const newElem: PlacedElement = {
+    // Screen points are not PDF points. The canvas is rendered at whatever
+    // width the device gives it, while pdf-lib writes into the page's own
+    // coordinate space, so a tap has to be divided by the display ratio.
+    // Storing raw locationX/locationY put a centre tap near 29% across an A4
+    // page.
+    const viewport: ViewportTransform = {
+      scale: geometry.displayWidth / geometry.pointWidth,
+      originX: 0,
+      originY: 0,
+      pageWidth: geometry.pointWidth,
+      pageHeight: geometry.pointHeight,
+    };
+
+    const sizeInPoints = {
+      width: width / viewport.scale,
+      height: height / viewport.scale,
+    };
+
+    // screenToPdfCoordinates returns the bottom-left origin pdf-lib expects,
+    // measured from the tap; shift by half the element so it lands centred.
+    const anchor = screenToPdfCoordinates(
+      locationX - width / 2,
+      locationY - height / 2,
+      viewport,
+    );
+
+    addPlacedElement({
       id: `elem_${Date.now()}`,
       pageIndex: activePageIndex,
       type: activeTool,
-      x: Math.max(10, locationX - width / 2),
-      y: Math.max(10, locationY - height / 2),
-      width,
-      height,
+      x: Math.max(0, Math.min(anchor.x, geometry.pointWidth - sizeInPoints.width)),
+      y: Math.max(0, Math.min(anchor.y - sizeInPoints.height, geometry.pointHeight - sizeInPoints.height)),
+      width: sizeInPoints.width,
+      height: sizeInPoints.height,
       content,
-    };
-
-    addPlacedElement(newElem);
+    });
   };
 
   const handleExport = async () => {
@@ -192,39 +222,23 @@ export default function EditorScreen() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
       >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={handleCanvasTap}
-          className="w-full aspect-[1/1.3] bg-white rounded-xl shadow-2xl relative overflow-hidden border border-slate-700"
+        <PdfPageCanvas
+          uri={document.uri}
+          pageIndex={activePageIndex}
+          onTap={handleCanvasTap}
+          onGeometry={setGeometry}
         >
-          {/* Simulated contract document lines */}
-          <View className="p-6 flex-col gap-4">
-            <View className="h-4 bg-slate-200 rounded w-1/3 mb-4" />
-            <View className="h-2.5 bg-slate-200 rounded w-full" />
-            <View className="h-2.5 bg-slate-200 rounded w-5/6" />
-            <View className="h-2.5 bg-slate-200 rounded w-4/5" />
-            <View className="h-2.5 bg-slate-200 rounded w-full" />
-            <View className="h-2.5 bg-slate-200 rounded w-3/4" />
-
-            <View className="mt-8 pt-8 border-t border-slate-300 flex-row justify-between">
-              <View className="w-40 border-b border-slate-400 pb-1">
-                <Text className="text-[10px] text-slate-400 uppercase font-mono">{t('signatory')}</Text>
-              </View>
-              <View className="w-24 border-b border-slate-400 pb-1">
-                <Text className="text-[10px] text-slate-400 uppercase font-mono">{t('date')}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Render Placed Stamps on this page */}
-          {pageElements.map((elem) => (
-            <FormFieldOverlay
-              key={elem.id}
-              element={elem}
-              onRemove={removePlacedElement}
-            />
-          ))}
-        </TouchableOpacity>
+          {geometry
+            ? pageElements.map((elem) => (
+                <FormFieldOverlay
+                  key={elem.id}
+                  element={elem}
+                  geometry={geometry}
+                  onRemove={removePlacedElement}
+                />
+              ))
+            : null}
+        </PdfPageCanvas>
       </ScrollView>
 
       {/* Bottom Tool Selector Ribbon */}

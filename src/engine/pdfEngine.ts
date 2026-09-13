@@ -1,6 +1,6 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import * as FileSystem from 'expo-file-system/legacy';
-import { PlacedElement, PdfDocumentInfo } from '../store/usePdfStore';
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import * as FileSystem from "expo-file-system/legacy";
+import { PlacedElement, PdfDocumentInfo } from "../store/usePdfStore";
 
 // Helper to convert base64 to Uint8Array
 const base64ToUint8Array = (base64: string): Uint8Array => {
@@ -13,7 +13,10 @@ const base64ToUint8Array = (base64: string): Uint8Array => {
   return bytes;
 };
 
-export const parsePdfMetadata = async (fileUri: string, fileName: string): Promise<PdfDocumentInfo> => {
+export const parsePdfMetadata = async (
+  fileUri: string,
+  fileName: string,
+): Promise<PdfDocumentInfo> => {
   const base64 = await FileSystem.readAsStringAsync(fileUri, {
     encoding: FileSystem.EncodingType.Base64,
   });
@@ -41,7 +44,7 @@ export const parsePdfMetadata = async (fileUri: string, fileName: string): Promi
 export const exportSignedPdf = async (
   sourceUri: string,
   elements: PlacedElement[],
-  outputName: string
+  outputName: string,
 ): Promise<string> => {
   const base64 = await FileSystem.readAsStringAsync(sourceUri, {
     encoding: FileSystem.EncodingType.Base64,
@@ -55,39 +58,43 @@ export const exportSignedPdf = async (
   for (const elem of elements) {
     if (elem.pageIndex >= pages.length) continue;
     const page = pages[elem.pageIndex];
-    const { height: pageHeight } = page.getSize();
 
-    // Map screen/point coordinate to bottom-left PDF coordinate
+    // Elements are already stored in PDF points with a bottom-left origin, as
+    // produced by screenToPdfCoordinates. They previously held raw screen
+    // points and were flipped here, which double-counted the conversion.
     const targetX = elem.x;
-    const targetY = Math.max(0, pageHeight - elem.y - elem.height);
+    const targetY = elem.y;
 
-    if (elem.type === 'signature' && elem.content) {
-      try {
-        const cleanBase64 = elem.content.replace(/^data:image\/\w+;base64,/, '');
-        const pngBytes = base64ToUint8Array(cleanBase64);
-        const embeddedImage = await pdfDoc.embedPng(pngBytes);
-        page.drawImage(embeddedImage, {
-          x: targetX,
-          y: targetY,
-          width: elem.width,
-          height: elem.height,
-        });
-      } catch (err) {
-        console.warn('Could not embed signature PNG:', err);
-      }
-    } else if (elem.type === 'text' || elem.type === 'date') {
-      page.drawText(elem.content || '', {
+    if (elem.type === "signature" && elem.content) {
+      // A failure here must reach the user. Swallowing it is what let the
+      // previous build report a successful export of a document that had no
+      // signature on it.
+      const cleanBase64 = elem.content.replace(/^data:image\/\w+;base64,/, "");
+      const embeddedImage = await pdfDoc.embedPng(
+        base64ToUint8Array(cleanBase64),
+      );
+      page.drawImage(embeddedImage, {
         x: targetX,
-        y: targetY + 4,
-        size: 14,
+        y: targetY,
+        width: elem.width,
+        height: elem.height,
+      });
+    } else if (elem.type === "text" || elem.type === "date") {
+      // Size from the placed box so text matches what was shown on screen.
+      const size = Math.max(6, elem.height * 0.7);
+      page.drawText(elem.content || "", {
+        x: targetX,
+        y: targetY + (elem.height - size) / 2,
+        size,
         font,
         color: rgb(0.1, 0.1, 0.1),
       });
-    } else if (elem.type === 'check') {
-      page.drawText('✓', {
+    } else if (elem.type === "check") {
+      const size = Math.max(8, elem.height * 0.8);
+      page.drawText("✓", {
         x: targetX,
-        y: targetY + 2,
-        size: 18,
+        y: targetY + (elem.height - size) / 2,
+        size,
         font,
         color: rgb(0.1, 0.5, 0.2),
       });
@@ -104,7 +111,8 @@ export const exportSignedPdf = async (
 
   const modifiedBytesBase64 = await pdfDoc.saveAsBase64({ dataUri: false });
 
-  const baseCache = FileSystem.cacheDirectory || `${FileSystem.documentDirectory}cache/`;
+  const baseCache =
+    FileSystem.cacheDirectory || `${FileSystem.documentDirectory}cache/`;
   const exportPath = `${baseCache}signpure_${Date.now()}_${outputName}`;
 
   await FileSystem.writeAsStringAsync(exportPath, modifiedBytesBase64, {
