@@ -43,27 +43,12 @@ Deployed via Coolify on Hetzner VPS (`2.28.42.222`).
 * Zero-log and zero-cloud invariants: No remote analytics, error trackers, or telemetry that uploads user media or identifiers.
 * All processing must occur in local sandboxed storage and stream to `expo-media-library` or `expo-sharing`.
 
-## 6. Mandatory 12-Language Localization Protocol
-* **Required Languages (12 Tier-1 Global Markets):**
-  1. English (`en`) - Default / Fallback
-  2. Spanish (`es`) - Latin America & Spain
-  3. French (`fr`) - France & Francophone markets
-  4. German (`de`) - DACH region
-  5. Russian (`ru`) - Eastern Europe & Central Asia
-  6. Simplified Chinese (`zh`) - Greater China
-  7. Japanese (`ja`) - Japan
-  8. Brazilian Portuguese (`pt`) - Brazil & Portugal
-  9. Korean (`ko`) - South Korea
-  10. Italian (`it`) - Italy
-  11. Turkish (`tr`) - Turkey & MENA/Turkic region
-  12. Arabic (`ar`) - Middle East & North Africa (RTL supported)
-* **Zero Hardcoded Strings Rule:**
-  - Every UI string, button, title, alert, and paywall message MUST use `t('key')` from `src/i18n`.
-  - Adding features or modifying screens requires updating all 12 language dictionaries in `src/i18n/index.ts`.
-* **Anti-Subscription Promise Localization:**
-  - The anti-subscription value proposition must be clearly translated in all 12 languages:
-    *"No Subscriptions. No Accounts. 100% On-Device Privacy. Own It Forever."*
-* **Device Locale Detection:**
-  - Locale is automatically resolved via `expo-localization`'s `Localization.getLocales()[0]?.languageCode`.
-  - Unknown or missing locales cleanly fallback to English (`en`).
+## 6. Localization
 
+Governed by `docs/agents/12-product-standards.md` §16.1 in the portfolio root.
+Fourteen locales, ten of them mandatory, with RTL layout required for Persian
+(`fa`) and Arabic (`ar`). Do not restate the locale list here — it drifted once
+already.
+
+Use `scripts/add-i18n-keys.mjs` from the portfolio root to add a key; it refuses
+to write a partial set, so a key cannot ship English to a market by accident.
