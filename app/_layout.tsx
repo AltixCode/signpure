@@ -7,8 +7,10 @@ import { initPurchases, checkIsPro } from '../src/services/purchases';
 import { usePdfStore } from '../src/store/usePdfStore';
 import { t } from '../src/i18n';
 import '../global.css';
+import { useTheme } from '../src/theme/useTheme';
 
 export default function RootLayout() {
+  const theme = useTheme();
   const router = useRouter();
   const { isPro, setIsPro } = usePdfStore();
 
@@ -19,13 +21,13 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={theme.statusBarStyle} />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#020617' },
-          headerTintColor: '#ffffff',
+          headerStyle: { backgroundColor: theme.headerBackground },
+          headerTintColor: theme.headerTintColor,
           headerTitleStyle: { fontWeight: '700' },
-          contentStyle: { backgroundColor: '#020617' },
+          contentStyle: { backgroundColor: theme.background },
           headerRight: () =>
             // No background or border of our own: iOS 26+ already draws a
             // container behind header bar items, and adding one produced a
