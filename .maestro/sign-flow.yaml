@@ -5,8 +5,11 @@ name: Sign a document end to end
 # in PDF points), so the export can be checked for a mark in the right place
 # rather than eyeballed. The build this replaces drew a mock contract and never
 # embedded the signature at all.
+# clearState so the run does not inherit state from a previous one. A failed
+# run can leave the system document picker presented, and it survives a plain
+# relaunch -- the next run then drives the vault steps against the picker.
 - launchApp:
-    clearState: false
+    clearState: true
 # `expo run:ios` launches through the dev-client deep link even for a Release
 # build, and the resulting "Open in ..." alert covers the accessibility tree.
 # Settle first so the conditional sees it rather than racing the launch.
@@ -17,6 +20,14 @@ name: Sign a document end to end
       visible: "Open in .*"
     commands:
       - tapOn: "Cancel"
+- runFlow:
+    when:
+      visible: "On My iPhone"
+    commands:
+      - tapOn:
+          point: "354,101"
+      - waitForAnimationToEnd:
+          timeout: 4000
 - assertVisible: "Private Document Signing"
 
 # Draw a signature into the vault first; placing one without it is now blocked.
@@ -37,20 +48,66 @@ name: Sign a document end to end
 # The pad is inline in the vault screen; its canvas spans roughly 34-51% of
 # the screen height. Swiping below that lands on the Clear/Save row and can
 # trigger the scroll view's interactive pop instead of drawing.
+# Slow, overlapping strokes. A fast swipe yields very few touch samples, so the
+# pad recorded a single short tick from three full-width gestures -- enough to
+# look like a signature on screen but far too little ink to prove anything in
+# the exported PDF.
+# A zigzag of steep diagonals, drawn slowly.
+#
+# Two constraints, both learned the hard way. Long mostly-horizontal swipes
+# trigger the navigator's interactive pop: the flow silently returned to the
+# home screen mid-signature and a later stroke landed on the document card,
+# opening the file picker. And a fast swipe yields very few touch samples, so
+# three full-width gestures recorded a single short tick -- enough to look like
+# a signature on screen, far too little ink to prove anything in the export.
 - swipe:
-    start: "22%,40%"
-    end: "70%,45%"
-    duration: 800
+    start: "26%,37%"
+    end: "30%,49%"
+    duration: 900
 - swipe:
-    start: "30%,46%"
-    end: "62%,38%"
-    duration: 800
+    start: "30%,49%"
+    end: "34%,37%"
+    duration: 900
 - swipe:
-    start: "40%,38%"
-    end: "55%,47%"
-    duration: 800
-- takeScreenshot: artifacts/03-drawn
-
+    start: "34%,37%"
+    end: "38%,49%"
+    duration: 900
+- swipe:
+    start: "38%,49%"
+    end: "42%,37%"
+    duration: 900
+- swipe:
+    start: "42%,37%"
+    end: "46%,49%"
+    duration: 900
+- swipe:
+    start: "46%,49%"
+    end: "50%,37%"
+    duration: 900
+- swipe:
+    start: "50%,37%"
+    end: "54%,49%"
+    duration: 900
+- swipe:
+    start: "54%,49%"
+    end: "58%,37%"
+    duration: 900
+- swipe:
+    start: "58%,37%"
+    end: "62%,49%"
+    duration: 900
+- swipe:
+    start: "62%,49%"
+    end: "66%,37%"
+    duration: 900
+- swipe:
+    start: "66%,37%"
+    end: "70%,49%"
+    duration: 900
+- swipe:
+    start: "70%,49%"
+    end: "74%,37%"
+    duration: 900
 - tapOn: ".*Save to Vault.*"
 - extendedWaitUntil:
     visible: ".*SAVED SIGNATURES.*1.*"
@@ -84,9 +141,37 @@ name: Sign a document end to end
             - tapOn: "On My iPhone"
             - waitForAnimationToEnd:
                 timeout: 6000
-- tapOn: ".*signpure-fixture.*"
+# Tap the thumbnail, not the filename. A tap on the label reports COMPLETED and
+# leaves the picker open; the cell's hit target is the icon above it. The grid
+# holds exactly one file, so its position is fixed.
+- tapOn:
+    point: "71,242"
 
+# Maestro matches text case-insensitively, so ".*(Sign|Date|Text|Check).*" was
+# satisfied by the filename "signpure-fixture" while the picker was still open:
+# the assertion passed before the editor existed. Anchor on the page canvas,
+# which only the editor has.
 - extendedWaitUntil:
-    visible: ".*(Sign|Date|Text|Check).*"
+    visible: ".*Tap the page to place.*"
     timeout: 45000
+- waitForAnimationToEnd:
+    timeout: 4000
 - takeScreenshot: artifacts/05-editor
+
+# Place the signature on the rule. The fixture puts that rule at PDF y=200,
+# x 60-300 (origin bottom-left); rendered at this size the line sits at roughly
+# (127, 628) in the 402x874 viewport. verify-signed-pdf.sh checks the export for
+# ink inside that rule, so a tap landing anywhere else fails the gate rather
+# than quietly producing a signed-looking file.
+- tapOn:
+    point: "127,626"
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: artifacts/06-placed
+
+- tapOn: "Export"
+# Sharing.shareAsync presents the system share sheet once the file is written.
+- extendedWaitUntil:
+    visible: ".*(Close|Cancel|AirDrop|Copy).*"
+    timeout: 60000
+- takeScreenshot: artifacts/07-exported

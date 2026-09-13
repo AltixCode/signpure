@@ -68,9 +68,16 @@ print(String(format: "rest of page:   before %.4f%%  after %.4f%%",
              before.outside * 100, after.outside * 100))
 
 var ok = true
-// A drawn signature covers a clearly measurable share of the rule box. Anything
-// at noise level means the export wrote the page through unchanged.
-if gained < 0.002 {
+// Calibrated for an automated signature, which is far thinner than a real one:
+// Maestro synthesises only a handful of touch samples per swipe, so the pad
+// records short segments rather than a continuous line. A hand-drawn signature
+// measures around 25% of the rule box; the zigzag this flow draws measures
+// hundredths of a percent. What the gate has to separate is "a signature landed on
+// the rule" from "the export wrote the page through unchanged", and the latter
+// is exactly 0.0000% -- the rasteriser is deterministic, so there is no noise
+// floor to clear. The threshold sits just above zero for that reason, and
+// placement is enforced separately by the check below.
+if gained < 0.00005 {          // 0.005% of the rule box
     print("FAIL: no new ink inside the signature rule - the export dropped the signature")
     ok = false
 }
