@@ -159,7 +159,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Privacy & Architectural Guarantees */}
-        <View className="mt-4 space-y-3">
+        <View className="mt-4 flex-col gap-3">
           <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
             {t('archGuarantees')}
           </Text>

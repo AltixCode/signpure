@@ -149,7 +149,7 @@ export default function EditorScreen() {
         </View>
 
         {document.pageCount > 1 && (
-          <View className="flex-row items-center space-x-1">
+          <View className="flex-row items-center gap-1">
             <TouchableOpacity
               onPress={() => setActivePageIndex(Math.max(0, activePageIndex - 1))}
               disabled={activePageIndex === 0}
@@ -198,7 +198,7 @@ export default function EditorScreen() {
           className="w-full aspect-[1/1.3] bg-white rounded-xl shadow-2xl relative overflow-hidden border border-slate-700"
         >
           {/* Simulated contract document lines */}
-          <View className="p-6 space-y-4">
+          <View className="p-6 flex-col gap-4">
             <View className="h-4 bg-slate-200 rounded w-1/3 mb-4" />
             <View className="h-2.5 bg-slate-200 rounded w-full" />
             <View className="h-2.5 bg-slate-200 rounded w-5/6" />

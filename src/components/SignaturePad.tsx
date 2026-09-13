@@ -107,7 +107,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
       </View>
 
       {/* Actions */}
-      <View className="flex-row justify-between mt-4 space-x-3">
+      <View className="flex-row justify-between mt-4 gap-3">
         <TouchableOpacity
           onPress={handleClear}
           className="bg-slate-800 px-4 py-3 rounded-xl flex-row items-center"

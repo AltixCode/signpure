@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import {
   Sparkles,
@@ -100,7 +101,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
         <View className="bg-slate-950 border-t border-slate-800 rounded-t-3xl p-6 max-h-[90%]">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center space-x-2">
+            <View className="flex-row items-center gap-2">
               <View className="bg-blue-500/20 p-2 rounded-xl">
                 <Sparkles size={20} color="#60A5FA" />
               </View>
@@ -116,17 +117,22 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
           </View>
 
           {/* Anti-Subscription Banner */}
-          <View className="bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-900/60 p-4 rounded-2xl mb-5">
+          <LinearGradient
+            colors={['#172554', '#0F172A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="border border-blue-900/60 p-4 rounded-2xl mb-5"
+          >
             <Text className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">
               {t('antiSubTitle')}
             </Text>
             <Text className="text-sm font-semibold text-slate-100 leading-snug">
               {t('antiSubHeadline')}
             </Text>
-          </View>
+          </LinearGradient>
 
           {/* Features List */}
-          <ScrollView showsVerticalScrollIndicator={false} className="space-y-3.5 mb-5">
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-col gap-3.5 mb-5">
             {features.map((f, i) => (
               <View key={i} className="flex-row items-start mb-3">
                 <View className="bg-slate-900 p-2 rounded-xl border border-slate-800 mr-3">
@@ -164,7 +170,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
           </TouchableOpacity>
 
           {/* Restore & Policy Links */}
-          <View className="flex-row items-center justify-center space-x-6 mt-4">
+          <View className="flex-row items-center justify-center gap-6 mt-4">
             <TouchableOpacity onPress={handleRestore} disabled={loading}>
               <Text className="text-slate-400 text-xs underline">{t('restorePurchases')}</Text>
             </TouchableOpacity>

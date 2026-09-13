@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import {
   Sparkles,
@@ -104,7 +105,12 @@ export default function PaywallScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {/* Anti-Subscription Card */}
-        <View className="bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-900/60 p-5 rounded-2xl mb-6">
+        <LinearGradient
+            colors={['rgba(23,37,84,0.8)', '#0F172A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="border border-blue-900/60 p-5 rounded-2xl mb-6"
+          >
           <Text className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">
             {t('antiSubTitle')}
           </Text>
@@ -114,10 +120,10 @@ export default function PaywallScreen() {
           <Text className="text-slate-400 text-xs mt-2 leading-relaxed">
             {t('antiSubDesc')}
           </Text>
-        </View>
+        </LinearGradient>
 
         {/* Features List */}
-        <View className="space-y-4 mb-6">
+        <View className="flex-col gap-4 mb-6">
           {features.map((f, i) => (
             <View key={i} className="flex-row items-start mb-4">
               <View className="bg-slate-900 p-2.5 rounded-xl border border-slate-800 mr-3.5">
@@ -156,7 +162,7 @@ export default function PaywallScreen() {
           )}
         </TouchableOpacity>
 
-        <View className="flex-row items-center justify-center space-x-6 mt-4">
+        <View className="flex-row items-center justify-center gap-6 mt-4">
           <TouchableOpacity onPress={handleRestore} disabled={loading}>
             <Text className="text-slate-400 text-xs underline">{t('restorePurchases')}</Text>
           </TouchableOpacity>

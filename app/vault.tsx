@@ -151,7 +151,7 @@ export default function VaultScreen() {
         </Text>
 
         {vaultSignatures.length > 0 ? (
-          <View className="space-y-3">
+          <View className="flex-col gap-3">
             {vaultSignatures.map((sig) => (
               <View
                 key={sig.id}
