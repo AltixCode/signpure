@@ -56,3 +56,9 @@ None. App 3 (SignPure) is certified and ready for submission.
 * Store provisioning: BLOCKED — App Store Connect exposes only HushTunnel and the CLI cannot create apps; Google Play API access returns `403 SERVICE_DISABLED` for the Reporting API. SignPure store records and price schedules are therefore not verified.
 * Physical simulator/emulator interaction and zero-console-error QA: NOT RUN in this pass.
 * Next action: configure the repository secret, dispatch the workflow, and verify the resulting iOS/TestFlight, Android/Play, and GitHub Release statuses.
+## Verification Update — 2026-09-13 (Runner and Store Gating)
+
+* Workflow update pushed in the latest main commit: Linux jobs install the Android SDK platform/build tools/NDK explicitly; iOS remains on the self-hosted macOS ARM64 runner.
+* iOS and Android jobs remain independent so they can run simultaneously on separate self-hosted machines. Repository concurrency still limits duplicate release workflows to one active run per repository.
+* Store uploads are disabled on ordinary pushes until repository variable `ENABLE_STORE_UPLOADS=true` is configured. Manual dispatch can enable submission explicitly. This keeps builds green while App Store Connect and Google Play records are being created by the owner.
+* The `PLAY_STORE_SERVICE_ACCOUNT_JSON` secret is the only supported CI credential input for Play publishing; no local credential path is committed.
