@@ -45,7 +45,7 @@ None. App 3 (SignPure) is certified and ready for submission.
 
 ## Verification Update — 2026-09-13
 
-* Pushed commit: `25ee35d` on `main`.
+* Latest workflow commit: `9f503e0` on `main`; skipped Play uploads emit an explicit warning.
 * TypeScript: PASS — `rtk pnpm typecheck`
 * CI-style dependency install: PASS — `rtk npm ci --legacy-peer-deps`
 * Production exports: PASS — `rtk npm run export:ios`, `rtk npm run export:android`
