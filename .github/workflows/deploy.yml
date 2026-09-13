@@ -112,12 +112,21 @@ jobs:
           pod install --repo-update
 
       - name: Build & Export Signed iOS IPA
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER }}
         run: |
           mkdir -p build/output
           SCHEME=$(ls ios | grep .xcodeproj | head -n 1 | sed 's/.xcodeproj//')
           echo "Building iOS Scheme: $SCHEME"
 
-          AUTH_KEY="/Users/ata/Certificates/AuthKey_NGDJQCGYXQ.p8"
+          : "${APP_STORE_CONNECT_API_KEY_CONTENT:?Missing APP_STORE_CONNECT_API_KEY_CONTENT}"
+          : "${APP_STORE_CONNECT_API_KEY_ID:?Missing APP_STORE_CONNECT_API_KEY_ID}"
+          : "${APP_STORE_CONNECT_API_KEY_ISSUER:?Missing APP_STORE_CONNECT_API_KEY_ISSUER}"
+          AUTH_KEY="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          printf '%s' "$APP_STORE_CONNECT_API_KEY_CONTENT" > "$AUTH_KEY"
+          chmod 600 "$AUTH_KEY"
           if [ -f "$AUTH_KEY" ]; then
             echo "Archiving with App Store Connect API Key..."
             xcodebuild archive \
@@ -129,8 +138,8 @@ jobs:
               -derivedDataPath "build/DerivedData" \
               -allowProvisioningUpdates \
               -authenticationKeyPath "$AUTH_KEY" \
-              -authenticationKeyID "NGDJQCGYXQ" \
-              -authenticationKeyIssuerID "c7e17516-b80c-42fe-a192-229b4cee0a48" \
+              -authenticationKeyID "$APP_STORE_CONNECT_API_KEY_ID" \
+              -authenticationKeyIssuerID "$APP_STORE_CONNECT_API_KEY_ISSUER" \
               COMPILER_INDEX_STORE_ENABLE=NO \
               DEVELOPMENT_TEAM="8Q8Y559285"
           else
@@ -174,8 +183,8 @@ jobs:
               -exportOptionsPlist "build/exportOptions.plist" \
               -allowProvisioningUpdates \
               -authenticationKeyPath "$AUTH_KEY" \
-              -authenticationKeyID "NGDJQCGYXQ" \
-              -authenticationKeyIssuerID "c7e17516-b80c-42fe-a192-229b4cee0a48"
+              -authenticationKeyID "$APP_STORE_CONNECT_API_KEY_ID" \
+              -authenticationKeyIssuerID "$APP_STORE_CONNECT_API_KEY_ISSUER"
           else
             xcodebuild -exportArchive \
               -archivePath "build/${SCHEME}.xcarchive" \
@@ -188,18 +197,28 @@ jobs:
             cp "$RAW_IPA" "build/output/${APP_NAME}-${APP_VERSION}.ipa"
             echo "Successfully generated IPA at build/output/${APP_NAME}-${APP_VERSION}.ipa"
           else
-            echo "Warning: No IPA generated in build/output"
+            echo "::error::No IPA generated in build/output"
+            exit 1
           fi
 
       - name: Upload to TestFlight
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.submit_to_stores == true) || vars.ENABLE_STORE_UPLOADS == 'true' }}
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER }}
         run: |
-          API_KEY_PATH="/Users/ata/Certificates/app_store_connect_api_key.json"
+          : "${APP_STORE_CONNECT_API_KEY_CONTENT:?Missing APP_STORE_CONNECT_API_KEY_CONTENT}"
+          : "${APP_STORE_CONNECT_API_KEY_ID:?Missing APP_STORE_CONNECT_API_KEY_ID}"
+          : "${APP_STORE_CONNECT_API_KEY_ISSUER:?Missing APP_STORE_CONNECT_API_KEY_ISSUER}"
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          printf '%s' "$APP_STORE_CONNECT_API_KEY_CONTENT" > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
           TARGET_IPA=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
-          if [ -f "$API_KEY_PATH" ] && [ -n "$TARGET_IPA" ] && [ -f "$TARGET_IPA" ]; then
-            echo "Uploading $TARGET_IPA to TestFlight via Fastlane Pilot..."
-            fastlane pilot upload --ipa "$TARGET_IPA" --api_key_path "$API_KEY_PATH" --skip_waiting_for_build_processing true
-          fi
+          [ -n "$TARGET_IPA" ] && [ -f "$TARGET_IPA" ] || { echo "::error::IPA missing"; exit 1; }
+          xcrun altool --upload-app -f "$TARGET_IPA" -t ios \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_API_KEY_ISSUER"
 
       - name: Stash iOS Artifacts
         uses: actions/upload-artifact@v4
@@ -280,6 +299,27 @@ jobs:
         run: |
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"
 
+      - name: Configure Android release signing
+        env:
+          APP_KEYSTORE_BASE64: ${{ secrets.APP_KEYSTORE_BASE64 }}
+          APP_KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+          APP_KEYSTORE_ALIAS: ${{ secrets.APP_KEYSTORE_ALIAS }}
+          APP_KEY_PASSWORD: ${{ secrets.APP_KEY_PASSWORD }}
+        run: |
+          : "${APP_KEYSTORE_BASE64:?Missing APP_KEYSTORE_BASE64}"
+          : "${APP_KEYSTORE_PASSWORD:?Missing APP_KEYSTORE_PASSWORD}"
+          : "${APP_KEYSTORE_ALIAS:?Missing APP_KEYSTORE_ALIAS}"
+          : "${APP_KEY_PASSWORD:?Missing APP_KEY_PASSWORD}"
+          KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+          printf '%s' "$APP_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          keytool -list -keystore "$KEYSTORE_PATH" -storepass "$APP_KEYSTORE_PASSWORD" -alias "$APP_KEYSTORE_ALIAS" >/dev/null
+          {
+            echo "KEYSTORE_PATH=$KEYSTORE_PATH"
+            echo "KEYSTORE_PASSWORD=$APP_KEYSTORE_PASSWORD"
+            echo "KEY_ALIAS=$APP_KEYSTORE_ALIAS"
+            echo "KEY_PASSWORD=$APP_KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
       - name: Expo Prebuild Android
         run: npx expo prebuild --platform android --clean --no-install
 
@@ -288,47 +328,48 @@ jobs:
           mkdir -p build/output
           cd android
           echo "Building Release APK..."
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew assembleRelease --stacktrace \
+            "-Pandroid.injected.signing.store.file=$KEYSTORE_PATH" \
+            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
+            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
+            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD"
           echo "Building Release AAB Bundle..."
-          ./gradlew bundleRelease --stacktrace
+          ./gradlew bundleRelease --stacktrace \
+            "-Pandroid.injected.signing.store.file=$KEYSTORE_PATH" \
+            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
+            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
+            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD"
           cd ..
 
           RAW_APK=$(find android/app/build/outputs/apk -name "*release*.apk" 2>/dev/null | head -n 1)
           if [ -n "$RAW_APK" ] && [ -f "$RAW_APK" ]; then
             cp "$RAW_APK" "build/output/${APP_NAME}-${APP_VERSION}.apk"
             echo "Successfully generated APK at build/output/${APP_NAME}-${APP_VERSION}.apk"
+          else
+            echo "::error::Release APK was not produced"
+            exit 1
           fi
 
           RAW_AAB=$(find android/app/build/outputs/bundle -name "*.aab" 2>/dev/null | head -n 1)
           if [ -n "$RAW_AAB" ] && [ -f "$RAW_AAB" ]; then
             cp "$RAW_AAB" "build/output/${APP_NAME}-${APP_VERSION}.aab"
             echo "Successfully generated AAB at build/output/${APP_NAME}-${APP_VERSION}.aab"
+          else
+            echo "::error::Release AAB was not produced"
+            exit 1
           fi
 
       - name: Upload to Google Play Store
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.submit_to_stores == true) || vars.ENABLE_STORE_UPLOADS == 'true' }}
-        env:
-          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
-        run: |
-          SERVICE_KEY=""
-          if [ -n "${PLAY_STORE_SERVICE_ACCOUNT_JSON:-}" ]; then
-            SERVICE_KEY="$RUNNER_TEMP/play-store-service-account.json"
-            printf '%s' "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$SERVICE_KEY"
-          fi
-          TARGET_AAB="build/output/${APP_NAME}-${APP_VERSION}.aab"
-          PKG_NAME=$(node -e "console.log(require('./app.json').expo.android.package)")
-
-          if [ -f "$TARGET_AAB" ] && [ -f "$SERVICE_KEY" ]; then
-            echo "Uploading $TARGET_AAB to Google Play internal test track for package: $PKG_NAME..."
-            gplay release \
-              --package "$PKG_NAME" \
-              --bundle "$TARGET_AAB" \
-              --track internal \
-              --service-account-json "$SERVICE_KEY" \
-              --commit
-          else
-            echo "::warning::Google Play upload skipped: PLAY_STORE_SERVICE_ACCOUNT_JSON or AAB is unavailable."
-          fi
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.altixcode.signpure
+          releaseFiles: build/output/${{ steps.version.outputs.app_name }}-${{ steps.version.outputs.app_version }}.aab
+          track: internal
+          status: completed
+          changesNotSentForReview: true
+          releaseName: ${{ steps.version.outputs.app_name }} ${{ steps.version.outputs.app_version }}
 
       - name: Stash Android Artifacts
         uses: actions/upload-artifact@v4
