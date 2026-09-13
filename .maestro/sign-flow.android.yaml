@@ -44,7 +44,9 @@ name: Sign a document end to end (Android)
     visible: ".*SAVED SIGNATURES.*1.*"
     timeout: 25000
 
-- tapOn: ".*Back.*"
+# Android's back affordance is an icon with no label, unlike iOS where the
+# header button reads "Back". Use the system back gesture.
+- back
 - extendedWaitUntil:
     visible: ".*Select PDF Document.*"
     timeout: 20000
@@ -56,7 +58,11 @@ name: Sign a document end to end (Android)
 - waitForAnimationToEnd:
     timeout: 6000
 - takeScreenshot: artifacts/android-03-picker
-- tapOn: ".*signpure-fixture.*"
+# Tap the row body, not the filename element: the row carries a preview
+# affordance on its right, and a tap resolved to the text opened Google Docs'
+# PDF viewer instead of returning the file to the app.
+- tapOn:
+    point: "25%,33%"
 
 - extendedWaitUntil:
     visible: ".*Tap the page to place.*"
