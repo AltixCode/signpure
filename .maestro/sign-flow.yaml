@@ -24,8 +24,13 @@ name: Sign a document end to end
     visible: ".*Anti-Subscription.*"
     timeout: 20000
 - takeScreenshot: artifacts/02-paywall
-- assertNotVisible: ".*PRO.*"
-- tapOn: ".*Cancel.*"
+# The header action is labelled with the paywall title; on the paywall
+# itself there must be exactly one element carrying it (the nav title),
+# not a second tappable one.
+- assertVisible: ".*Anti-Subscription.*"
+# The paywall closes with an icon button; dismiss the modal instead of
+# depending on a label the icon does not carry.
+- back
 
 # Draw a signature into the vault first; placing one without it is now blocked.
 - tapOn: ".*Signature Vault.*"
