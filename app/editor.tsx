@@ -18,7 +18,6 @@ import {
   CheckSquare,
   Share2,
   ChevronLeft,
-  ChevronRight,
   Sparkles,
 } from 'lucide-react-native';
 import { usePdfStore } from '../src/store/usePdfStore';
@@ -28,6 +27,7 @@ import { PdfPageCanvas, CanvasGeometry } from '../src/components/PdfPageCanvas';
 import { FormFieldOverlay } from '../src/components/FormFieldOverlay';
 import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
+import { ForwardChevron } from '../src/components/DirectionalIcons';
 
 type ToolType = 'signature' | 'date' | 'text' | 'check';
 
@@ -196,7 +196,7 @@ export default function EditorScreen() {
                 activePageIndex === document.pageCount - 1 ? 'opacity-30' : 'bg-slate-800'
               }`}
             >
-              <ChevronRight size={16} color="#FFFFFF" />
+              <ForwardChevron size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         )}

@@ -11,13 +11,13 @@ import {
   ShieldCheck,
   Fingerprint,
   Upload,
-  ArrowRight,
   FileCheck,
 } from 'lucide-react-native';
 import { usePdfStore } from '../src/store/usePdfStore';
 import { parsePdfMetadata } from '../src/engine/pdfEngine';
 import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
+import { ForwardArrow } from '../src/components/DirectionalIcons';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -98,7 +98,7 @@ export default function HomeScreen() {
               className="bg-blue-600 py-3.5 px-4 rounded-xl flex-row items-center justify-center mt-2 shadow-lg shadow-blue-500/20"
             >
               <Text className="text-white font-bold text-base mr-2">{t('editorTitle')}</Text>
-              <ArrowRight size={18} color="#FFFFFF" />
+              <ForwardArrow size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         ) : (
@@ -155,7 +155,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-          <ArrowRight size={16} color="#94A3B8" />
+          <ForwardArrow size={16} color="#94A3B8" />
         </TouchableOpacity>
 
         {/* Privacy & Architectural Guarantees */}

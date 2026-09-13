@@ -18,7 +18,24 @@
       "bundleIdentifier": "com.altixcode.signpure",
       "buildNumber": "1",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "SignPure uses Face ID / Touch ID to secure your signature vault and confidential documents."
+        "NSFaceIDUsageDescription": "SignPure uses Face ID / Touch ID to secure your signature vault and confidential documents.",
+        "CFBundleLocalizations": [
+          "en",
+          "es",
+          "fr",
+          "de",
+          "ru",
+          "zh",
+          "ja",
+          "pt",
+          "ko",
+          "it",
+          "tr",
+          "ar",
+          "fa",
+          "el"
+        ],
+        "CFBundleDevelopmentRegion": "en"
       }
     },
     "android": {
