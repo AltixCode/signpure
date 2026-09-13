@@ -308,6 +308,8 @@ jobs:
               --track internal \
               --service-account-json "$SERVICE_KEY" \
               --commit
+          else
+            echo "::warning::Google Play upload skipped: PLAY_STORE_SERVICE_ACCOUNT_JSON or AAB is unavailable."
           fi
 
       - name: Stash Android Artifacts
