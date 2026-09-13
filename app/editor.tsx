@@ -28,10 +28,12 @@ import { FormFieldOverlay } from '../src/components/FormFieldOverlay';
 import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
 import { ForwardChevron } from '../src/components/DirectionalIcons';
+import { useTheme } from '../src/theme/useTheme';
 
 type ToolType = 'signature' | 'date' | 'text' | 'check';
 
 export default function EditorScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const {
     document,
@@ -166,14 +168,14 @@ export default function EditorScreen() {
   const pageElements = placedElements.filter((e) => e.pageIndex === activePageIndex);
 
   return (
-    <View className="flex-1 bg-slate-950 px-4 py-2">
+    <View className="flex-1 px-4 py-2" style={{ backgroundColor: theme.background }}>
       {/* Top Header Controls: Page Pagination */}
-      <View className="flex-row items-center justify-between bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl mb-3">
+      <View className="flex-row items-center justify-between border px-4 py-2.5 rounded-2xl mb-3" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
         <View className="flex-1 mr-2">
-          <Text className="text-white font-bold text-xs" numberOfLines={1}>
+          <Text className="font-bold text-xs" style={{ color: theme.text }} numberOfLines={1}>
             {document.name}
           </Text>
-          <Text className="text-slate-400 text-[10px]">
+          <Text className="text-[10px]" style={{ color: theme.textSecondary }}>
             {t('pageOf', { current: activePageIndex + 1, total: document.pageCount })}
           </Text>
         </View>
@@ -183,20 +185,26 @@ export default function EditorScreen() {
             <TouchableOpacity
               onPress={() => setActivePageIndex(Math.max(0, activePageIndex - 1))}
               disabled={activePageIndex === 0}
-              className={`p-1.5 rounded-lg mr-1 ${activePageIndex === 0 ? 'opacity-30' : 'bg-slate-800'}`}
+              className="p-1.5 rounded-lg mr-1"
+              style={{
+                backgroundColor: theme.controlSurface,
+                opacity: activePageIndex === 0 ? 0.3 : 1,
+              }}
             >
-              <ChevronLeft size={16} color="#FFFFFF" />
+              <ChevronLeft size={16} color={theme.text} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() =>
                 setActivePageIndex(Math.min(document.pageCount - 1, activePageIndex + 1))
               }
               disabled={activePageIndex === document.pageCount - 1}
-              className={`p-1.5 rounded-lg ${
-                activePageIndex === document.pageCount - 1 ? 'opacity-30' : 'bg-slate-800'
-              }`}
+              className="p-1.5 rounded-lg"
+              style={{
+                backgroundColor: theme.controlSurface,
+                opacity: activePageIndex === document.pageCount - 1 ? 0.3 : 1,
+              }}
             >
-              <ForwardChevron size={16} color="#FFFFFF" />
+              <ForwardChevron size={16} color={theme.text} />
             </TouchableOpacity>
           </View>
         )}
@@ -208,11 +216,11 @@ export default function EditorScreen() {
           className="bg-blue-600 px-3.5 py-1.5 rounded-xl flex-row items-center ml-2"
         >
           {isExporting ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={theme.onPrimary} />
           ) : (
             <>
-              <Share2 size={14} color="#FFFFFF" />
-              <Text className="text-white font-bold text-xs ml-1.5">{t('export')}</Text>
+              <Share2 size={14} color={theme.onPrimary} />
+              <Text className="font-bold text-xs ml-1.5" style={{ color: theme.onPrimary }}>{t('export')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -242,18 +250,24 @@ export default function EditorScreen() {
       </ScrollView>
 
       {/* Bottom Tool Selector Ribbon */}
-      <View className="bg-slate-900 border border-slate-800 p-2.5 rounded-2xl mt-2 flex-row justify-between items-center">
+      <View className="border p-2.5 rounded-2xl mt-2 flex-row justify-between items-center" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setActiveTool('signature');
           }}
-          className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl mr-1 ${
-            activeTool === 'signature' ? 'bg-blue-600' : 'bg-slate-800/60'
-          }`}
+          className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl mr-1"
+          style={{
+            backgroundColor: activeTool === 'signature' ? theme.primary : theme.controlSurface,
+          }}
         >
-          <PenTool size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">{t('toolSign')}</Text>
+          <PenTool size={14} color={activeTool === 'signature' ? theme.onPrimary : theme.text} />
+          <Text
+            className="text-xs font-bold ml-1.5"
+            style={{ color: activeTool === 'signature' ? theme.onPrimary : theme.text }}
+          >
+            {t('toolSign')}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -261,12 +275,18 @@ export default function EditorScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setActiveTool('date');
           }}
-          className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl mx-1 ${
-            activeTool === 'date' ? 'bg-blue-600' : 'bg-slate-800/60'
-          }`}
+          className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl mx-1"
+          style={{
+            backgroundColor: activeTool === 'date' ? theme.primary : theme.controlSurface,
+          }}
         >
-          <Calendar size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">{t('toolDate')}</Text>
+          <Calendar size={14} color={activeTool === 'date' ? theme.onPrimary : theme.text} />
+          <Text
+            className="text-xs font-bold ml-1.5"
+            style={{ color: activeTool === 'date' ? theme.onPrimary : theme.text }}
+          >
+            {t('toolDate')}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -274,12 +294,18 @@ export default function EditorScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setActiveTool('text');
           }}
-          className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl mx-1 ${
-            activeTool === 'text' ? 'bg-blue-600' : 'bg-slate-800/60'
-          }`}
+          className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl mx-1"
+          style={{
+            backgroundColor: activeTool === 'text' ? theme.primary : theme.controlSurface,
+          }}
         >
-          <Type size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">{t('toolText')}</Text>
+          <Type size={14} color={activeTool === 'text' ? theme.onPrimary : theme.text} />
+          <Text
+            className="text-xs font-bold ml-1.5"
+            style={{ color: activeTool === 'text' ? theme.onPrimary : theme.text }}
+          >
+            {t('toolText')}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -287,12 +313,18 @@ export default function EditorScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setActiveTool('check');
           }}
-          className={`flex-1 flex-row items-center justify-center py-2.5 rounded-xl ml-1 ${
-            activeTool === 'check' ? 'bg-blue-600' : 'bg-slate-800/60'
-          }`}
+          className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl ml-1"
+          style={{
+            backgroundColor: activeTool === 'check' ? theme.primary : theme.controlSurface,
+          }}
         >
-          <CheckSquare size={14} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">{t('toolCheck')}</Text>
+          <CheckSquare size={14} color={activeTool === 'check' ? theme.onPrimary : theme.text} />
+          <Text
+            className="text-xs font-bold ml-1.5"
+            style={{ color: activeTool === 'check' ? theme.onPrimary : theme.text }}
+          >
+            {t('toolCheck')}
+          </Text>
         </TouchableOpacity>
       </View>
 

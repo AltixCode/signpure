@@ -18,8 +18,10 @@ import { parsePdfMetadata } from '../src/engine/pdfEngine';
 import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
 import { ForwardArrow } from '../src/components/DirectionalIcons';
+import { useTheme } from '../src/theme/useTheme';
 
 export default function HomeScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const { document, isPro, documentsSignedCount, setDocument } = usePdfStore();
   const [loading, setLoading] = useState(false);
@@ -58,36 +60,36 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView edges={['bottom']} className="flex-1 bg-slate-950 px-5">
+    <SafeAreaView edges={['bottom']} className="flex-1 px-5" style={{ backgroundColor: theme.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Header Hero */}
         <View className="mt-4 mb-5">
           <View className="inline-flex self-start bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full mb-3 flex-row items-center">
-            <Sparkles size={12} color="#60A5FA" />
-            <Text className="text-blue-400 text-xs font-semibold ml-1.5">
+            <Sparkles size={12} color={theme.primary} />
+            <Text className="text-xs font-semibold ml-1.5" style={{ color: theme.primary }}>
               {t('heroBadge')}
             </Text>
           </View>
-          <Text className="text-3xl font-extrabold text-white tracking-tight">
+          <Text className="text-3xl font-extrabold tracking-tight" style={{ color: theme.text }}>
             {t('heroTitle')}
           </Text>
-          <Text className="text-slate-400 text-sm mt-1.5 leading-relaxed">
+          <Text className="text-sm mt-1.5 leading-relaxed" style={{ color: theme.textSecondary }}>
             {t('heroSubtitle')}
           </Text>
         </View>
 
         {/* Current Active Document or Import Card */}
         {document ? (
-          <View className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mb-5">
+          <View className="border rounded-3xl p-5 mb-5" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
             <View className="flex-row items-center mb-3">
               <View className="bg-blue-600/20 p-2.5 rounded-2xl mr-3">
-                <FileCheck size={22} color="#60A5FA" />
+                <FileCheck size={22} color={theme.primary} />
               </View>
               <View className="flex-1">
-                <Text className="text-white font-bold text-base" numberOfLines={1}>
+                <Text className="font-bold text-base" style={{ color: theme.text }} numberOfLines={1}>
                   {document.name}
                 </Text>
-                <Text className="text-slate-400 text-xs mt-0.5">
+                <Text className="text-xs mt-0.5" style={{ color: theme.textSecondary }}>
                   {t('pageOf', { current: 1, total: document.pageCount })}
                 </Text>
               </View>
@@ -97,8 +99,8 @@ export default function HomeScreen() {
               onPress={() => router.push('/editor')}
               className="bg-blue-600 py-3.5 px-4 rounded-xl flex-row items-center justify-center mt-2 shadow-lg shadow-blue-500/20"
             >
-              <Text className="text-white font-bold text-base mr-2">{t('editorTitle')}</Text>
-              <ForwardArrow size={18} color="#FFFFFF" />
+              <Text className="font-bold text-base mr-2" style={{ color: theme.onPrimary }}>{t('editorTitle')}</Text>
+              <ForwardArrow size={18} color={theme.onPrimary} />
             </TouchableOpacity>
           </View>
         ) : (
@@ -106,19 +108,19 @@ export default function HomeScreen() {
             onPress={handlePickDocument}
             disabled={loading}
             activeOpacity={0.85}
-            className="border-2 border-dashed border-slate-700 bg-slate-900/40 rounded-3xl p-8 items-center justify-center my-2"
+            className="border-2 border-dashed rounded-3xl p-8 items-center justify-center my-2" style={{ borderColor: theme.cardBorder, backgroundColor: theme.card }}
           >
             {loading ? (
-              <ActivityIndicator color="#60A5FA" size="large" />
+              <ActivityIndicator color={theme.primary} size="large" />
             ) : (
               <>
                 <View className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-full mb-4">
-                  <Upload size={36} color="#60A5FA" />
+                  <Upload size={36} color={theme.primary} />
                 </View>
-                <Text className="text-white font-bold text-lg text-center mb-1">
+                <Text className="font-bold text-lg text-center mb-1" style={{ color: theme.text }}>
                   {t('selectPdfPrompt')}
                 </Text>
-                <Text className="text-slate-400 text-xs text-center max-w-xs leading-relaxed">
+                <Text className="text-xs text-center max-w-xs leading-relaxed" style={{ color: theme.textSecondary }}>
                   {t('selectPdfDesc')}
                 </Text>
               </>
@@ -128,12 +130,12 @@ export default function HomeScreen() {
 
         {/* Free limit indicator */}
         {!isPro && (
-          <View className="bg-slate-900/80 border border-slate-800/80 p-3 rounded-2xl mb-4 flex-row items-center justify-between">
-            <Text className="text-slate-400 text-xs">
+          <View className="border p-3 rounded-2xl mb-4 flex-row items-center justify-between" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
+            <Text className="text-xs" style={{ color: theme.textSecondary }}>
               {t('freeLimit', { count: documentsSignedCount, limit: FREE_MONTHLY_LIMIT })}
             </Text>
             <TouchableOpacity onPress={() => setPaywallVisible(true)}>
-              <Text className="text-amber-400 text-xs font-bold">{t('unlock')}</Text>
+              <Text className="text-xs font-bold" style={{ color: theme.warning }}>{t('unlock')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -142,47 +144,47 @@ export default function HomeScreen() {
         <TouchableOpacity
           onPress={() => router.push('/vault')}
           activeOpacity={0.8}
-          className="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-4 flex-row items-center justify-between"
+          className="border p-4 rounded-2xl mb-4 flex-row items-center justify-between" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}
         >
           <View className="flex-row items-center flex-1 mr-3">
             <View className="bg-purple-500/20 p-2.5 rounded-xl mr-3">
-              <Fingerprint size={20} color="#C084FC" />
+              <Fingerprint size={20} color={theme.purple} />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-sm">{t('openVault')}</Text>
-              <Text className="text-slate-400 text-xs mt-0.5">
+              <Text className="font-bold text-sm" style={{ color: theme.text }}>{t('openVault')}</Text>
+              <Text className="text-xs mt-0.5" style={{ color: theme.textSecondary }}>
                 {t('drawSignatureDesc')}
               </Text>
             </View>
           </View>
-          <ForwardArrow size={16} color="#94A3B8" />
+          <ForwardArrow size={16} color={theme.textMuted} />
         </TouchableOpacity>
 
         {/* Privacy & Architectural Guarantees */}
         <View className="mt-4 flex-col gap-3">
-          <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+          <Text className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: theme.textMuted }}>
             {t('archGuarantees')}
           </Text>
 
-          <View className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex-row items-start mb-3">
+          <View className="border p-4 rounded-2xl flex-row items-start mb-3" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
             <View className="bg-blue-500/10 p-2 rounded-xl mr-3">
-              <ShieldCheck size={18} color="#60A5FA" />
+              <ShieldCheck size={18} color={theme.primary} />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-sm">{t('airGapped')}</Text>
-              <Text className="text-slate-400 text-xs mt-0.5 leading-relaxed">
+              <Text className="font-bold text-sm" style={{ color: theme.text }}>{t('airGapped')}</Text>
+              <Text className="text-xs mt-0.5 leading-relaxed" style={{ color: theme.textSecondary }}>
                 {t('airGappedDesc')}
               </Text>
             </View>
           </View>
 
-          <View className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex-row items-start mb-3">
+          <View className="border p-4 rounded-2xl flex-row items-start mb-3" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
             <View className="bg-emerald-500/10 p-2 rounded-xl mr-3">
-              <PenTool size={18} color="#34D399" />
+              <PenTool size={18} color={theme.success} />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-bold text-sm">{t('vectorFlattening')}</Text>
-              <Text className="text-slate-400 text-xs mt-0.5 leading-relaxed">
+              <Text className="font-bold text-sm" style={{ color: theme.text }}>{t('vectorFlattening')}</Text>
+              <Text className="text-xs mt-0.5 leading-relaxed" style={{ color: theme.textSecondary }}>
                 {t('vectorFlatteningDesc')}
               </Text>
             </View>

@@ -17,50 +17,52 @@ import { usePdfStore } from '../src/store/usePdfStore';
 import { usePaywall } from '../src/hooks/usePaywall';
 import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '../src/config/legal';
 import { t } from '../src/i18n';
+import { useTheme } from '../src/theme/useTheme';
 
 export default function PaywallScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const { ctaLabel, loading, errorMsg, handlePurchase, handleRestore } =
     usePaywall(() => router.back());
 
   const features = [
     {
-      icon: <FileSignature size={20} color="#38BDF8" />,
+      icon: <FileSignature size={20} color={theme.accent} />,
       title: t('feat1Title'),
       desc: t('feat1Desc'),
     },
     {
-      icon: <Fingerprint size={20} color="#A855F7" />,
+      icon: <Fingerprint size={20} color={theme.purple} />,
       title: t('feat2Title'),
       desc: t('feat2Desc'),
     },
     {
-      icon: <Layers size={20} color="#F59E0B" />,
+      icon: <Layers size={20} color={theme.warning} />,
       title: t('feat3Title'),
       desc: t('feat3Desc'),
     },
     {
-      icon: <ShieldCheck size={20} color="#10B981" />,
+      icon: <ShieldCheck size={20} color={theme.success} />,
       title: t('feat4Title'),
       desc: t('feat4Desc'),
     },
   ];
 
   return (
-    <View className="flex-1 bg-slate-950 px-6 py-4">
+    <View className="flex-1 px-6 py-4" style={{ backgroundColor: theme.background }}>
       {/* Top Header */}
       <View className="flex-row items-center justify-between mt-2 mb-4">
         <View className="flex-row items-center">
           <View className="bg-blue-500/20 p-2 rounded-xl mr-2.5">
-            <Sparkles size={20} color="#60A5FA" />
+            <Sparkles size={20} color={theme.primary} />
           </View>
-          <Text className="text-xl font-extrabold text-white">{t('paywallTitle')}</Text>
+          <Text className="text-xl font-extrabold" style={{ color: theme.text }}>{t('paywallTitle')}</Text>
         </View>
         <TouchableOpacity
           onPress={() => router.back()}
-          className="bg-slate-900 p-2 rounded-full"
+          className="p-2 rounded-full" style={{ backgroundColor: theme.card }}
         >
-          <X size={18} color="#94A3B8" />
+          <X size={18} color={theme.textMuted} />
         </TouchableOpacity>
       </View>
 
@@ -72,13 +74,13 @@ export default function PaywallScreen() {
             end={{ x: 1, y: 1 }}
             style={{ borderWidth: 1, borderColor: 'rgba(30,58,138,0.6)', padding: 20, borderRadius: 16, marginBottom: 24 }}
           >
-          <Text className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-1">
+          <Text className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: theme.primary }}>
             {t('antiSubTitle')}
           </Text>
-          <Text className="text-base font-bold text-white leading-snug">
+          <Text className="text-base font-bold leading-snug" style={{ color: theme.text }}>
             {t('antiSubHeadline')}
           </Text>
-          <Text className="text-slate-400 text-xs mt-2 leading-relaxed">
+          <Text className="text-xs mt-2 leading-relaxed" style={{ color: theme.textSecondary }}>
             {t('antiSubDesc')}
           </Text>
         </LinearGradient>
@@ -87,19 +89,19 @@ export default function PaywallScreen() {
         <View className="flex-col gap-4 mb-6">
           {features.map((f, i) => (
             <View key={i} className="flex-row items-start mb-4">
-              <View className="bg-slate-900 p-2.5 rounded-xl border border-slate-800 mr-3.5">
+              <View className="p-2.5 rounded-xl border mr-3.5" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
                 {f.icon}
               </View>
               <View className="flex-1">
-                <Text className="text-white text-sm font-bold">{f.title}</Text>
-                <Text className="text-slate-400 text-xs mt-0.5 leading-relaxed">{f.desc}</Text>
+                <Text className="text-sm font-bold" style={{ color: theme.text }}>{f.title}</Text>
+                <Text className="text-xs mt-0.5 leading-relaxed" style={{ color: theme.textSecondary }}>{f.desc}</Text>
               </View>
             </View>
           ))}
         </View>
 
         {errorMsg && (
-          <Text className="text-red-400 text-xs text-center mb-3">{errorMsg}</Text>
+          <Text className="text-xs text-center mb-3" style={{ color: theme.danger }}>{errorMsg}</Text>
         )}
       </ScrollView>
 
@@ -112,23 +114,23 @@ export default function PaywallScreen() {
           className="bg-blue-600 active:bg-blue-500 p-4 rounded-2xl items-center flex-row justify-center shadow-lg shadow-blue-500/25"
         >
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={theme.onPrimary} />
           ) : (
             <>
-              <Text className="text-white font-extrabold text-base mr-2">
+              <Text className="font-extrabold text-base mr-2" style={{ color: theme.onPrimary }}>
                 {ctaLabel}
               </Text>
-              <Check size={18} color="#FFFFFF" strokeWidth={3} />
+              <Check size={18} color={theme.onPrimary} strokeWidth={3} />
             </>
           )}
         </TouchableOpacity>
 
         <View className="flex-row items-center justify-center gap-6 mt-4">
           <TouchableOpacity onPress={handleRestore} disabled={loading}>
-            <Text className="text-slate-400 text-xs underline">{t('restorePurchases')}</Text>
+            <Text className="text-xs underline" style={{ color: theme.textSecondary }}>{t('restorePurchases')}</Text>
           </TouchableOpacity>
-          <Text className="text-slate-600 text-xs">•</Text>
-          <Text className="text-slate-500 text-xs">{t('oneTimePayment')}</Text>
+          <Text className="text-xs" style={{ color: theme.textMuted }}>•</Text>
+          <Text className="text-xs" style={{ color: theme.textMuted }}>{t('oneTimePayment')}</Text>
         </View>
         <View className="mt-3 flex-row items-center justify-center gap-5">
           <TouchableOpacity
@@ -136,7 +138,7 @@ export default function PaywallScreen() {
             accessibilityRole="link"
             hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
           >
-            <Text className="text-xs text-slate-500 underline">
+            <Text className="text-xs underline" style={{ color: theme.textMuted }}>
               {t('termsOfUse')}
             </Text>
           </TouchableOpacity>
@@ -145,7 +147,7 @@ export default function PaywallScreen() {
             accessibilityRole="link"
             hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
           >
-            <Text className="text-xs text-slate-500 underline">
+            <Text className="text-xs underline" style={{ color: theme.textMuted }}>
               {t('privacyPolicy')}
             </Text>
           </TouchableOpacity>

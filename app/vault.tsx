@@ -17,8 +17,10 @@ import { SignaturePad } from '../src/components/SignaturePad';
 import { PaywallModal } from '../src/components/PaywallModal';
 import { useSignatureRasterizer } from '../src/engine/signatureRasterizer';
 import { t } from '../src/i18n';
+import { useTheme } from '../src/theme/useTheme';
 
 export default function VaultScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const { vaultSignatures, isPro, addVaultSignature, removeVaultSignature } = usePdfStore();
 
@@ -76,12 +78,12 @@ export default function VaultScreen() {
 
   if (!isUnlocked) {
     return (
-      <View className="flex-1 bg-slate-950 items-center justify-center p-6">
+      <View className="flex-1 items-center justify-center p-6" style={{ backgroundColor: theme.background }}>
         <View className="bg-purple-500/20 p-5 rounded-full mb-4">
-          <Fingerprint size={48} color="#C084FC" />
+          <Fingerprint size={48} color={theme.purple} />
         </View>
-        <Text className="text-xl font-bold text-white text-center">{t('unlockingVault')}</Text>
-        <Text className="text-slate-400 text-xs text-center mt-1">
+        <Text className="text-xl font-bold text-center" style={{ color: theme.text }}>{t('unlockingVault')}</Text>
+        <Text className="text-xs text-center mt-1" style={{ color: theme.textSecondary }}>
           {t('authenticating')}
         </Text>
       </View>
@@ -91,17 +93,17 @@ export default function VaultScreen() {
   return (
     <>
       {RasterizerPortal}
-    <View className="flex-1 bg-slate-950 px-5 py-4">
+    <View className="flex-1 px-5 py-4" style={{ backgroundColor: theme.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Top Vault Status */}
-        <View className="flex-row items-center justify-between mb-4 pb-3 border-b border-slate-800">
+        <View className="flex-row items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: theme.cardBorder }}>
           <View className="flex-row items-center">
             <View className="bg-purple-500/20 p-2 rounded-xl mr-2.5">
-              <ShieldCheck size={18} color="#C084FC" />
+              <ShieldCheck size={18} color={theme.purple} />
             </View>
             <View>
-              <Text className="text-white font-bold text-base">{t('encryptedVault')}</Text>
-              <Text className="text-emerald-400 text-xs font-medium">{t('biometricsActive')}</Text>
+              <Text className="font-bold text-base" style={{ color: theme.text }}>{t('encryptedVault')}</Text>
+              <Text className="text-xs font-medium" style={{ color: theme.success }}>{t('biometricsActive')}</Text>
             </View>
           </View>
 
@@ -109,8 +111,8 @@ export default function VaultScreen() {
             onPress={handleAddNewSignature}
             className="bg-blue-600 px-3.5 py-2 rounded-xl flex-row items-center"
           >
-            <Plus size={16} color="#FFFFFF" />
-            <Text className="text-white font-bold text-xs ml-1">{t('newSignature')}</Text>
+            <Plus size={16} color={theme.onPrimary} />
+            <Text className="font-bold text-xs ml-1" style={{ color: theme.onPrimary }}>{t('newSignature')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -126,12 +128,12 @@ export default function VaultScreen() {
 
         {/* Free Tier Notice */}
         {!isPro && (
-          <View className="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-4 flex-row items-center justify-between">
+          <View className="border p-4 rounded-2xl mb-4 flex-row items-center justify-between" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
             <View className="flex-1 mr-3">
-              <Text className="text-slate-300 font-semibold text-xs">
+              <Text className="font-semibold text-xs" style={{ color: theme.textSecondary }}>
                 {t('freeTierNotice', { count: vaultSignatures.length })}
               </Text>
-              <Text className="text-slate-500 text-[10px] mt-0.5">
+              <Text className="text-[10px] mt-0.5" style={{ color: theme.textMuted }}>
                 {t('freeTierDesc')}
               </Text>
             </View>
@@ -139,14 +141,14 @@ export default function VaultScreen() {
               onPress={() => setPaywallVisible(true)}
               className="bg-amber-500/20 px-2.5 py-1.5 rounded-lg border border-amber-500/30 flex-row items-center"
             >
-              <Lock size={12} color="#F59E0B" />
-              <Text className="text-amber-400 text-xs font-bold ml-1">{t('unlock')}</Text>
+              <Lock size={12} color={theme.warning} />
+              <Text className="text-xs font-bold ml-1" style={{ color: theme.warning }}>{t('unlock')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Signatures List */}
-        <Text className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+        <Text className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: theme.textSecondary }}>
           {t('savedSignatures', { count: vaultSignatures.length })}
         </Text>
 
@@ -155,10 +157,10 @@ export default function VaultScreen() {
             {vaultSignatures.map((sig) => (
               <View
                 key={sig.id}
-                className="bg-slate-900 border border-slate-800 p-4 rounded-2xl mb-3 flex-row items-center justify-between"
+                className="border p-4 rounded-2xl mb-3 flex-row items-center justify-between" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}
               >
                 <View className="flex-1 mr-3">
-                  <Text className="text-white font-bold text-sm">{sig.name}</Text>
+                  <Text className="font-bold text-sm" style={{ color: theme.text }}>{sig.name}</Text>
                   {/* Show the stored signature, not a stand-in: a placeholder
                       gives the user no way to tell whether what they drew was
                       captured correctly before they put it on a document. */}
@@ -168,7 +170,7 @@ export default function VaultScreen() {
                     resizeMode="contain"
                     accessibilityLabel={t('savedSignaturePreview')}
                   />
-                  <Text className="text-slate-500 text-[10px] mt-1 font-mono">
+                  <Text className="text-[10px] mt-1 font-mono" style={{ color: theme.textMuted }}>
                     {t('createdDate', { date: new Date(sig.createdAt).toLocaleDateString() })}
                   </Text>
                 </View>
@@ -178,19 +180,19 @@ export default function VaultScreen() {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     removeVaultSignature(sig.id);
                   }}
-                  className="bg-slate-800 p-2.5 rounded-xl"
+                  className="p-2.5 rounded-xl" style={{ backgroundColor: theme.controlSurface }}
                 >
-                  <Trash2 size={16} color="#EF4444" />
+                  <Trash2 size={16} color={theme.danger} />
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         ) : (
-          <View className="bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl p-8 items-center justify-center">
-            <Text className="text-slate-400 text-sm font-medium text-center mb-1">
+          <View className="border border-dashed rounded-3xl p-8 items-center justify-center" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
+            <Text className="text-sm font-medium text-center mb-1" style={{ color: theme.textSecondary }}>
               {t('noSavedSignatures')}
             </Text>
-            <Text className="text-slate-500 text-xs text-center max-w-xs">
+            <Text className="text-xs text-center max-w-xs" style={{ color: theme.textMuted }}>
               {t('noSavedSignaturesDesc')}
             </Text>
           </View>

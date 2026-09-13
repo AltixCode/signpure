@@ -89,6 +89,8 @@ export const FormFieldOverlay: React.FC<FormFieldOverlayProps> = ({
         style={{ position: "absolute", right: -10, top: -10 }}
         className="h-6 w-6 items-center justify-center rounded-full bg-rose-500"
       >
+        {/* The delete affordance sits on a fixed brand red in both themes, so its
+            glyph is white regardless of appearance. */}
         <X size={12} color="#FFFFFF" strokeWidth={3} />
       </TouchableOpacity>
     </View>

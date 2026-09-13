@@ -10,6 +10,7 @@ import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { RotateCcw, Check, X, PenTool } from 'lucide-react-native';
 import { t } from '../i18n';
+import { useTheme } from '../theme/useTheme';
 
 interface SignaturePadProps {
   onSave: (svgPath: string) => void;
@@ -17,6 +18,7 @@ interface SignaturePadProps {
 }
 
 export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) => {
+  const theme = useTheme();
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState<string>('');
 
@@ -53,28 +55,30 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
     }
   };
 
+  const enabled = paths.length > 0 || currentPath !== null;
+
   return (
-    <View className="bg-slate-900 border border-slate-800 rounded-3xl p-5 w-full">
-      <View className="flex-row items-center justify-between mb-3 pb-2 border-b border-slate-800">
+    <View className="border rounded-3xl p-5 w-full" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
+      <View className="flex-row items-center justify-between mb-3 pb-2 border-b" style={{ borderColor: theme.cardBorder }}>
         <View className="flex-row items-center">
           <View className="bg-blue-500/20 p-2 rounded-xl mr-2">
-            <PenTool size={16} color="#60A5FA" />
+            <PenTool size={16} color={theme.primary} />
           </View>
-          <Text className="text-white font-bold text-base">{t('drawSignature')}</Text>
+          <Text className="font-bold text-base" style={{ color: theme.text }}>{t('drawSignature')}</Text>
         </View>
         <TouchableOpacity onPress={onCancel} className="p-1">
-          <X size={18} color="#94A3B8" />
+          <X size={18} color={theme.textMuted} />
         </TouchableOpacity>
       </View>
 
-      <Text className="text-slate-400 text-xs mb-3">
+      <Text className="text-xs mb-3" style={{ color: theme.textSecondary }}>
         {t('drawSignatureDesc')}
       </Text>
 
       {/* Touch Canvas */}
       <View
         {...panResponder.panHandlers}
-        className="w-full h-44 bg-slate-950 border border-slate-700 rounded-2xl overflow-hidden relative justify-center"
+        className="w-full h-44 border rounded-2xl overflow-hidden relative justify-center" style={{ backgroundColor: theme.background, borderColor: theme.cardBorder }}
       >
         <Svg className="w-full h-full">
           {paths.map((d, index) => (
@@ -101,7 +105,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
         </Svg>
         {paths.length === 0 && !currentPath && (
           <View className="absolute items-center justify-center w-full pointer-events-none">
-            <Text className="text-slate-600 text-sm font-medium">{t('signHere')}</Text>
+            <Text className="text-sm font-medium" style={{ color: theme.textMuted }}>{t('signHere')}</Text>
           </View>
         )}
       </View>
@@ -110,21 +114,28 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, onCancel }) 
       <View className="flex-row justify-between mt-4 gap-3">
         <TouchableOpacity
           onPress={handleClear}
-          className="bg-slate-800 px-4 py-3 rounded-xl flex-row items-center"
+          className="px-4 py-3 rounded-xl flex-row items-center" style={{ backgroundColor: theme.controlSurface }}
         >
-          <RotateCcw size={14} color="#94A3B8" />
-          <Text className="text-slate-300 text-xs font-semibold ml-1.5">{t('clear')}</Text>
+          <RotateCcw size={14} color={theme.textMuted} />
+          <Text className="text-xs font-semibold ml-1.5" style={{ color: theme.textSecondary }}>{t('clear')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleSave}
-          disabled={paths.length === 0 && !currentPath}
-          className={`px-5 py-3 rounded-xl flex-row items-center ${
-            paths.length > 0 || currentPath ? 'bg-blue-600' : 'bg-slate-800 opacity-50'
-          }`}
+          disabled={!enabled}
+          className="px-5 py-3 rounded-xl flex-row items-center"
+          style={{
+            backgroundColor: enabled ? theme.primary : theme.controlSurface,
+            opacity: enabled ? 1 : 0.5,
+          }}
         >
-          <Check size={16} color="#FFFFFF" />
-          <Text className="text-white text-xs font-bold ml-1.5">{t('saveToVault')}</Text>
+          <Check size={16} color={enabled ? theme.onPrimary : theme.textMuted} />
+          <Text
+            className="text-xs font-bold ml-1.5"
+            style={{ color: enabled ? theme.onPrimary : theme.textMuted }}
+          >
+            {t('saveToVault')}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
