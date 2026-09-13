@@ -54,7 +54,29 @@
     },
     "plugins": [
       "expo-router",
-      "./plugins/withIOSSceneLifecycle.js"
+      "./plugins/withIOSSceneLifecycle.js",
+      [
+        "./plugins/withAndroidLocales",
+        {
+          "locales": [
+            "en",
+            "es",
+            "fr",
+            "de",
+            "ru",
+            "zh",
+            "ja",
+            "pt",
+            "ko",
+            "it",
+            "tr",
+            "ar",
+            "fa",
+            "el"
+          ]
+        }
+      ],
+      "./plugins/withAndroidRtl"
     ]
   }
 }
