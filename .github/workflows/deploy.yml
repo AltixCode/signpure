@@ -192,7 +192,7 @@ jobs:
           fi
 
       - name: Upload to TestFlight
-        if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.submit_to_stores == true) || vars.ENABLE_STORE_UPLOADS == 'true' }}
         run: |
           API_KEY_PATH="/Users/ata/Certificates/app_store_connect_api_key.json"
           TARGET_IPA=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
@@ -273,6 +273,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: |
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"
+
       - name: Expo Prebuild Android
         run: npx expo prebuild --platform android --clean --no-install
 
@@ -299,7 +306,7 @@ jobs:
           fi
 
       - name: Upload to Google Play Store
-        if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.submit_to_stores == true) || vars.ENABLE_STORE_UPLOADS == 'true' }}
         env:
           PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
         run: |
