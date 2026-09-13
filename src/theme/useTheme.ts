@@ -44,7 +44,7 @@ export const useTheme = (): ThemeColors => {
     primary: '#7C3AED',
     onPrimary: '#FFFFFF',
     primaryLight: isDark ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.10)',
-    primaryBorder: isDark ? 'rgba(139, 92, 246, 0.35)' : 'rgba(124, 58, 237, 0.25)',
+    primaryBorder: isDark ? 'rgba(124, 58, 237, 0.35)' : 'rgba(124, 58, 237, 0.25)',
     accent: '#A855F7',
     accentLight: isDark ? 'rgba(56, 189, 248, 0.15)' : 'rgba(56, 189, 248, 0.10)',
     accentBorder: isDark ? 'rgba(56, 189, 248, 0.35)' : 'rgba(56, 189, 248, 0.25)',
