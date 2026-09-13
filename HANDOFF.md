@@ -49,7 +49,7 @@ None. App 3 (SignPure) is certified and ready for submission.
 * TypeScript: PASS — `rtk pnpm typecheck`
 * CI-style dependency install: PASS — `rtk npm ci --legacy-peer-deps`
 * Production exports: PASS — `rtk npm run export:ios`, `rtk npm run export:android`
-* Local CI run status: `gh run list` returned no runs for `AltixCode/signpure`.
+* Observed GitHub Actions runs after push: `34745141334 (queued); 34745167844 (pending)` for `AltixCode/signpure`.
 * Workflow topology updated: iOS on `[self-hosted, macOS, ARM64]`; Android then GitHub Release on `[self-hosted, linux, x64]`; repository concurrency remains serialized.
 * Google Play upload now requires the `PLAY_STORE_SERVICE_ACCOUNT_JSON` repository secret. Store status: UNKNOWN.
 * Physical simulator/emulator interaction and zero-console-error QA: NOT RUN in this pass.
