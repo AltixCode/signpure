@@ -163,12 +163,12 @@ jobs:
               -allowProvisioningUpdates \
               -authenticationKeyPath "$AUTH_KEY" \
               -authenticationKeyID "NGDJQCGYXQ" \
-              -authenticationKeyIssuerID "c7e17516-b80c-42fe-a192-229b4cee0a48" || true
+              -authenticationKeyIssuerID "c7e17516-b80c-42fe-a192-229b4cee0a48"
           else
             xcodebuild -exportArchive \
               -archivePath "build/${SCHEME}.xcarchive" \
               -exportPath "build/output" \
-              -exportOptionsPlist "build/exportOptions.plist" || true
+              -exportOptionsPlist "build/exportOptions.plist"
           fi
 
           RAW_IPA=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
@@ -186,7 +186,7 @@ jobs:
           TARGET_IPA=$(find build/output -name "*.ipa" 2>/dev/null | head -n 1)
           if [ -f "$API_KEY_PATH" ] && [ -n "$TARGET_IPA" ] && [ -f "$TARGET_IPA" ]; then
             echo "Uploading $TARGET_IPA to TestFlight via Fastlane Pilot..."
-            fastlane pilot upload --ipa "$TARGET_IPA" --api_key_path "$API_KEY_PATH" --skip_waiting_for_build_processing true || true
+            fastlane pilot upload --ipa "$TARGET_IPA" --api_key_path "$API_KEY_PATH" --skip_waiting_for_build_processing true
           fi
 
       - name: Stash iOS Artifacts
@@ -198,8 +198,9 @@ jobs:
 
   build-android:
     name: Android Build & Package
-    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android' }}
-    runs-on: [self-hosted, macOS, ARM64]
+    if: ${{ always() && (github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'android') && (needs.build-ios.result == 'success' || inputs.platform == 'android') }}
+    needs: build-ios
+    runs-on: [self-hosted, linux, x64]
     outputs:
       app_name: ${{ steps.version.outputs.app_name }}
       app_version: ${{ steps.version.outputs.app_version }}
@@ -265,10 +266,7 @@ jobs:
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Build Android APK & AAB
-        env:
-          JAVA_HOME: /opt/homebrew/opt/openjdk@17
         run: |
-          export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
           mkdir -p build/output
           cd android
           echo "Building Release APK..."
@@ -291,8 +289,14 @@ jobs:
 
       - name: Upload to Google Play Store
         if: ${{ github.event_name == 'push' || inputs.submit_to_stores == true }}
+        env:
+          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
         run: |
-          SERVICE_KEY="/Users/ata/Certificates/play-store-service-account.json"
+          SERVICE_KEY=""
+          if [ -n "${PLAY_STORE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            SERVICE_KEY="$RUNNER_TEMP/play-store-service-account.json"
+            printf '%s' "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$SERVICE_KEY"
+          fi
           TARGET_AAB="build/output/${APP_NAME}-${APP_VERSION}.aab"
           PKG_NAME=$(node -e "console.log(require('./app.json').expo.android.package)")
 
@@ -303,7 +307,7 @@ jobs:
               --bundle "$TARGET_AAB" \
               --track internal \
               --service-account-json "$SERVICE_KEY" \
-              --commit || true
+              --commit
           fi
 
       - name: Stash Android Artifacts
@@ -319,7 +323,7 @@ jobs:
     name: Publish GitHub Release
     needs: [build-ios, build-android]
     if: always() && (needs.build-ios.result == 'success' || needs.build-android.result == 'success')
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -387,9 +391,9 @@ jobs:
           EOF
 
           # Clean leading spaces in RELEASE_NOTES.md lines
-          sed -i '' 's/^[ \t]*##/##/' RELEASE_NOTES.md 2>/dev/null || true
-          sed -i '' 's/^[ \t]*###/###/' RELEASE_NOTES.md 2>/dev/null || true
-          sed -i '' 's/^[ \t]*- /- /' RELEASE_NOTES.md 2>/dev/null || true
+          sed -i -e 's/^[ \t]*##/##/' RELEASE_NOTES.md
+          sed -i -e 's/^[ \t]*###/###/' RELEASE_NOTES.md
+          sed -i -e 's/^[ \t]*- /- /' RELEASE_NOTES.md
 
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
@@ -434,5 +438,7 @@ jobs:
 
       - name: Tag Git Commit
         run: |
-          git tag -f "$TAG_NAME"
-          git push origin "$TAG_NAME" --force || true
+          if ! git ls-remote --exit-code origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+          fi
