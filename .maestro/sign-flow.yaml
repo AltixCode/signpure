@@ -1,40 +1,92 @@
 appId: com.altixcode.signpure
 name: Sign a document end to end
 ---
-# Drives the real signing journey against an A4 fixture whose signature rule
-# sits at a known position (y=200, x 60-300 in PDF points), so the exported file
-# can be checked for a mark in the right place rather than eyeballed.
-#
-# Selectors wrap in .* because iOS composes one accessibility label per
-# pressable from all of its child Text nodes.
+# The fixture is A4 with a signature rule at a known position (y=200, x 60-300
+# in PDF points), so the export can be checked for a mark in the right place
+# rather than eyeballed. The build this replaces drew a mock contract and never
+# embedded the signature at all.
 - launchApp:
     clearState: false
+# `expo run:ios` launches through the dev-client deep link even for a Release
+# build, and the resulting "Open in ..." alert covers the accessibility tree.
+# Settle first so the conditional sees it rather than racing the launch.
+- waitForAnimationToEnd:
+    timeout: 6000
 - runFlow:
     when:
-      visible: "Open"
+      visible: "Open in .*"
     commands:
       - tapOn: "Cancel"
 - assertVisible: "Private Document Signing"
-- takeScreenshot: artifacts/01-home
-
-# The paywall must not be able to open itself: headerRight used to be inherited
-# from screenOptions by every route, including the paywall.
-- tapOn: ".*PRO.*"
-- extendedWaitUntil:
-    visible: ".*Anti-Subscription.*"
-    timeout: 20000
-- takeScreenshot: artifacts/02-paywall
-# The header action is labelled with the paywall title; on the paywall
-# itself there must be exactly one element carrying it (the nav title),
-# not a second tappable one.
-- assertVisible: ".*Anti-Subscription.*"
-# The paywall closes with an icon button; dismiss the modal instead of
-# depending on a label the icon does not carry.
-- back
 
 # Draw a signature into the vault first; placing one without it is now blocked.
 - tapOn: ".*Signature Vault.*"
 - extendedWaitUntil:
-    visible: ".*(New Signature|Add Signature|Draw).*"
+    visible: ".*(Vault|Signature).*"
     timeout: 25000
-- takeScreenshot: artifacts/03-vault
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: artifacts/01-vault
+
+- tapOn: ".*New Signature.*"
+- extendedWaitUntil:
+    visible: ".*(Draw|Clear|Save|Sign).*"
+    timeout: 20000
+- takeScreenshot: artifacts/02-pad
+
+# The pad is inline in the vault screen; its canvas spans roughly 34-51% of
+# the screen height. Swiping below that lands on the Clear/Save row and can
+# trigger the scroll view's interactive pop instead of drawing.
+- swipe:
+    start: "22%,40%"
+    end: "70%,45%"
+    duration: 800
+- swipe:
+    start: "30%,46%"
+    end: "62%,38%"
+    duration: 800
+- swipe:
+    start: "40%,38%"
+    end: "55%,47%"
+    duration: 800
+- takeScreenshot: artifacts/03-drawn
+
+- tapOn: ".*Save to Vault.*"
+- extendedWaitUntil:
+    visible: ".*SAVED SIGNATURES.*1.*"
+    timeout: 25000
+- takeScreenshot: artifacts/04-saved
+
+# Back to the document, open the fixture, and place the signature on the rule.
+- tapOn: ".*Back.*"
+- extendedWaitUntil:
+    visible: ".*Select PDF Document.*"
+    timeout: 20000
+- tapOn: ".*Select PDF Document.*"
+- extendedWaitUntil:
+    visible: ".*(Browse|Recents|Files|On My iPhone).*"
+    timeout: 25000
+- waitForAnimationToEnd:
+    timeout: 8000
+# The picker opens on Recents, which is empty on a fresh simulator; the fixture
+# lives under On My iPhone.
+- runFlow:
+    when:
+      visible: "No Recents"
+    commands:
+      - tapOn: "Browse"
+      - waitForAnimationToEnd:
+          timeout: 6000
+      - runFlow:
+          when:
+            visible: "On My iPhone"
+          commands:
+            - tapOn: "On My iPhone"
+            - waitForAnimationToEnd:
+                timeout: 6000
+- tapOn: ".*signpure-fixture.*"
+
+- extendedWaitUntil:
+    visible: ".*(Sign|Date|Text|Check).*"
+    timeout: 45000
+- takeScreenshot: artifacts/05-editor

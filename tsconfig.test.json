@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"]
+  },
+  "//": "Pure logic only. Components need NativeWind's JSX types, which the app tsconfig supplies.",
+  "include": ["src/engine/**/*", "src/store/**/*"]
+}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
@@ -159,7 +159,15 @@ export default function VaultScreen() {
               >
                 <View className="flex-1 mr-3">
                   <Text className="text-white font-bold text-sm">{sig.name}</Text>
-                  <Text className="text-blue-400 font-serif italic text-lg mt-1">{t('verifiedSign')}</Text>
+                  {/* Show the stored signature, not a stand-in: a placeholder
+                      gives the user no way to tell whether what they drew was
+                      captured correctly before they put it on a document. */}
+                  <Image
+                    source={{ uri: `data:image/png;base64,${sig.base64Png}` }}
+                    style={{ width: 160, height: 56, marginTop: 6 }}
+                    resizeMode="contain"
+                    accessibilityLabel={t('savedSignaturePreview')}
+                  />
                   <Text className="text-slate-500 text-[10px] mt-1 font-mono">
                     {t('createdDate', { date: new Date(sig.createdAt).toLocaleDateString() })}
                   </Text>

@@ -32,6 +32,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
 export const translations = {
   "en": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Saved signature preview",
     "noSignatureYet": "No signature saved yet",
     "noSignatureYetDesc": "Open the vault and draw a signature before placing one on the document.",
     "renderingPage": "Rendering page…",
@@ -123,6 +124,7 @@ export const translations = {
   },
   "es": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Vista previa de la firma guardada",
     "noSignatureYet": "Aún no hay firma guardada",
     "noSignatureYetDesc": "Abre la bóveda y dibuja una firma antes de colocarla en el documento.",
     "renderingPage": "Procesando página…",
@@ -214,6 +216,7 @@ export const translations = {
   },
   "fr": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Aperçu de la signature enregistrée",
     "noSignatureYet": "Aucune signature enregistrée",
     "noSignatureYetDesc": "Ouvrez le coffre et dessinez une signature avant de la placer sur le document.",
     "renderingPage": "Rendu de la page…",
@@ -305,6 +308,7 @@ export const translations = {
   },
   "de": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Vorschau der gespeicherten Unterschrift",
     "noSignatureYet": "Noch keine Unterschrift gespeichert",
     "noSignatureYetDesc": "Öffne den Tresor und zeichne eine Unterschrift, bevor du sie im Dokument platzierst.",
     "renderingPage": "Seite wird gerendert…",
@@ -396,6 +400,7 @@ export const translations = {
   },
   "ru": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Предварительный просмотр сохранённой подписи",
     "noSignatureYet": "Подпись ещё не сохранена",
     "noSignatureYetDesc": "Откройте хранилище и нарисуйте подпись, прежде чем размещать её в документе.",
     "renderingPage": "Отрисовка страницы…",
@@ -487,6 +492,7 @@ export const translations = {
   },
   "zh": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "已保存签名的预览",
     "noSignatureYet": "尚未保存签名",
     "noSignatureYetDesc": "请先打开保险库绘制签名，然后再放置到文档上。",
     "renderingPage": "正在渲染页面…",
@@ -578,6 +584,7 @@ export const translations = {
   },
   "ja": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "保存した署名のプレビュー",
     "noSignatureYet": "署名がまだ保存されていません",
     "noSignatureYetDesc": "先に保管庫で署名を作成してから、書類に配置してください。",
     "renderingPage": "ページを描画しています…",
@@ -669,6 +676,7 @@ export const translations = {
   },
   "pt": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Pré-visualização da assinatura salva",
     "noSignatureYet": "Nenhuma assinatura salva ainda",
     "noSignatureYetDesc": "Abra o cofre e desenhe uma assinatura antes de colocá-la no documento.",
     "renderingPage": "Renderizando página…",
@@ -760,6 +768,7 @@ export const translations = {
   },
   "ko": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "저장된 서명 미리보기",
     "noSignatureYet": "저장된 서명이 없습니다",
     "noSignatureYetDesc": "보관함에서 서명을 그린 후 문서에 배치하세요.",
     "renderingPage": "페이지를 렌더링하는 중…",
@@ -851,6 +860,7 @@ export const translations = {
   },
   "it": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Anteprima della firma salvata",
     "noSignatureYet": "Nessuna firma salvata",
     "noSignatureYetDesc": "Apri la cassaforte e disegna una firma prima di inserirla nel documento.",
     "renderingPage": "Rendering della pagina…",
@@ -942,6 +952,7 @@ export const translations = {
   },
   "tr": {
     "proBadge": "PRO",
+    "savedSignaturePreview": "Kayıtlı imza önizlemesi",
     "noSignatureYet": "Henüz kayıtlı imza yok",
     "noSignatureYetDesc": "Belgeye yerleştirmeden önce kasayı açıp bir imza çizin.",
     "renderingPage": "Sayfa işleniyor…",
@@ -1033,6 +1044,7 @@ export const translations = {
   },
   "ar": {
     "proBadge": "احترافي",
+    "savedSignaturePreview": "معاينة التوقيع المحفوظ",
     "noSignatureYet": "لا يوجد توقيع محفوظ بعد",
     "noSignatureYetDesc": "افتح الخزنة وارسم توقيعًا قبل وضعه على المستند.",
     "renderingPage": "جارٍ عرض الصفحة…",
