@@ -1,0 +1,45 @@
+appId: com.altixcode.signpure
+name: Store screenshots
+---
+# Shows the vault with a real signature in it and the editor over the real
+# fixture, rather than an empty document picker.
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: 01-hero
+
+- tapOn: ".*Signature Vault.*"
+- extendedWaitUntil:
+    visible: ".*New Signature.*"
+    timeout: 25000
+- tapOn: ".*New Signature.*"
+- extendedWaitUntil:
+    visible: ".*Save to Vault.*"
+    timeout: 20000
+# Steep diagonals: long horizontal swipes trigger the navigator's interactive
+# pop, and a fast swipe leaves too little ink to read as a signature.
+- swipe:
+    start: "30%,37%"
+    end: "38%,49%"
+    duration: 1200
+- swipe:
+    start: "38%,49%"
+    end: "46%,37%"
+    duration: 1200
+- swipe:
+    start: "46%,37%"
+    end: "54%,49%"
+    duration: 1200
+- swipe:
+    start: "54%,49%"
+    end: "62%,37%"
+    duration: 1200
+- takeScreenshot: 02-vault
+- tapOn: ".*Save to Vault.*"
+- extendedWaitUntil:
+    visible: ".*SAVED SIGNATURES.*1.*"
+    timeout: 25000
+- waitForAnimationToEnd:
+    timeout: 2500
+- takeScreenshot: 03-saved

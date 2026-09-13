@@ -1,0 +1,78 @@
+appId: com.altixcode.signpure
+name: Sign a document end to end (Android)
+---
+# Same contract as the iOS flow, against a different engine: page rendering is
+# android.graphics.pdf.PdfRenderer here, not PDFKit. The gate is still the
+# exported PDF -- verify-signed-pdf measures ink inside the signature rule.
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible: "Private Document Signing"
+
+# Draw a signature into the vault first; placing one without it is blocked.
+- tapOn: ".*Signature Vault.*"
+- extendedWaitUntil:
+    visible: ".*New Signature.*"
+    timeout: 25000
+- tapOn: ".*New Signature.*"
+- extendedWaitUntil:
+    visible: ".*Save to Vault.*"
+    timeout: 20000
+- takeScreenshot: artifacts/android-01-pad
+# Steep diagonals, drawn slowly. Long horizontal swipes trigger the navigator's
+# interactive pop, and a fast swipe yields too few touch samples to leave ink.
+- swipe:
+    start: "30%,37%"
+    end: "38%,49%"
+    duration: 1200
+- swipe:
+    start: "38%,49%"
+    end: "46%,37%"
+    duration: 1200
+- swipe:
+    start: "46%,37%"
+    end: "54%,49%"
+    duration: 1200
+- swipe:
+    start: "54%,49%"
+    end: "62%,37%"
+    duration: 1200
+- takeScreenshot: artifacts/android-02-drawn
+- tapOn: ".*Save to Vault.*"
+- extendedWaitUntil:
+    visible: ".*SAVED SIGNATURES.*1.*"
+    timeout: 25000
+
+- tapOn: ".*Back.*"
+- extendedWaitUntil:
+    visible: ".*Select PDF Document.*"
+    timeout: 20000
+- tapOn: ".*Select PDF Document.*"
+# Android opens the Storage Access Framework, not the photo picker.
+- extendedWaitUntil:
+    visible: ".*(Recent|Browse|Downloads|Open from).*"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: artifacts/android-03-picker
+- tapOn: ".*signpure-fixture.*"
+
+- extendedWaitUntil:
+    visible: ".*Tap the page to place.*"
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: artifacts/android-04-editor
+# The fixture's rule sits at PDF y=200, x 60-300; verify-signed-pdf fails if the
+# signature lands anywhere else.
+- tapOn:
+    point: "32%,72%"
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: artifacts/android-05-placed
+- tapOn: "Export"
+- extendedWaitUntil:
+    visible: ".*(Share|Save|Bluetooth|Nearby|Copy).*"
+    timeout: 60000
+- takeScreenshot: artifacts/android-06-exported
