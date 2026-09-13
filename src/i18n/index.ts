@@ -1165,9 +1165,34 @@ export function isRTL(): boolean {
   return currentLanguage === 'ar';
 }
 
+/**
+ * CLDR plural category for `count` in the active language, e.g. "one" or
+ * "other" in English, which also has "few"/"many" in Russian and Arabic.
+ *
+ * Falls back to an English-style one/other split where Intl.PluralRules is
+ * unavailable, which is still better than always rendering the plural form.
+ */
+function pluralCategory(count: number): string {
+  try {
+    return new Intl.PluralRules(currentLanguage).select(count);
+  } catch {
+    return count === 1 ? 'one' : 'other';
+  }
+}
+
 export function t(key: TranslationKey, params?: Record<string, string | number>): string {
   const langDict = (translations as any)[currentLanguage] || translations.en;
-  let text: string = langDict[key] || translations.en[key] || (key as string);
+  // A key may carry plural variants as suffixed siblings ("exportClips_one").
+  // Only keys that actually define one are affected; everything else resolves
+  // to the base key exactly as before.
+  let resolved: string = key as string;
+  if (params && typeof params.count === 'number') {
+    const variant = `${key}_${pluralCategory(params.count)}`;
+    if (langDict[variant] || (translations.en as any)[variant]) resolved = variant;
+  }
+  let text: string =
+    langDict[resolved] || (translations.en as any)[resolved] ||
+    langDict[key] || translations.en[key] || (key as string);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       text = text.split('{' + k + '}').join(String(v));
