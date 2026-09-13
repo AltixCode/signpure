@@ -52,5 +52,7 @@ None. App 3 (SignPure) is certified and ready for submission.
 * Observed GitHub Actions runs after push: `34745141334 (queued); 34745167844 (pending)` for `AltixCode/signpure`.
 * Workflow topology updated: iOS on `[self-hosted, macOS, ARM64]` and Android on `[self-hosted, linux, x64]` run independently in parallel; GitHub Release waits for both; hosted runner choices are explicit backup dispatch options.
 * Google Play upload now requires the `PLAY_STORE_SERVICE_ACCOUNT_JSON` repository secret. Store status: UNKNOWN.
+* RevenueCat: PASS for project `proja69d625c`; current iOS/Android apps, `pro` entitlement, and `$rc_lifetime` package are present with the $9.99 lifetime product. The custom native paywall is intentionally retained; RevenueCat verification's `offering has no attached paywall` is expected for this architecture.
+* Store provisioning: BLOCKED — App Store Connect exposes only HushTunnel and the CLI cannot create apps; Google Play API access returns `403 SERVICE_DISABLED` for the Reporting API. SignPure store records and price schedules are therefore not verified.
 * Physical simulator/emulator interaction and zero-console-error QA: NOT RUN in this pass.
 * Next action: configure the repository secret, dispatch the workflow, and verify the resulting iOS/TestFlight, Android/Play, and GitHub Release statuses.
