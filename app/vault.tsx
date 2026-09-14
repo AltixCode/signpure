@@ -164,12 +164,22 @@ export default function VaultScreen() {
                   {/* Show the stored signature, not a stand-in: a placeholder
                       gives the user no way to tell whether what they drew was
                       captured correctly before they put it on a document. */}
-                  <Image
-                    source={{ uri: `data:image/png;base64,${sig.base64Png}` }}
-                    style={{ width: 160, height: 56, marginTop: 6 }}
-                    resizeMode="contain"
-                    accessibilityLabel={t('savedSignaturePreview')}
-                  />
+                  {/* On a paper-coloured chip, because the stored PNG is the
+                      one that goes onto a document: near-black ink with a
+                      transparent background. Rendered straight onto the dark
+                      card it is invisible, which reads as "my signature did not
+                      save". */}
+                  <View
+                    className="mt-1.5 rounded-lg overflow-hidden items-center justify-center"
+                    style={{ width: 160, height: 56, backgroundColor: '#F8FAFC' }}
+                  >
+                    <Image
+                      source={{ uri: `data:image/png;base64,${sig.base64Png}` }}
+                      style={{ width: 152, height: 48 }}
+                      resizeMode="contain"
+                      accessibilityLabel={t('savedSignaturePreview')}
+                    />
+                  </View>
                   <Text className="text-[10px] mt-1 font-mono" style={{ color: theme.textMuted }}>
                     {t('createdDate', { date: new Date(sig.createdAt).toLocaleDateString() })}
                   </Text>

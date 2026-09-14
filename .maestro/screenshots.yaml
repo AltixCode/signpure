@@ -19,22 +19,68 @@ name: Store screenshots
     timeout: 20000
 # Steep diagonals: long horizontal swipes trigger the navigator's interactive
 # pop, and a fast swipe leaves too little ink to read as a signature.
+#
+# The vertical band is substituted by the runner rather than written here. The
+# canvas sits at 31-47% of the screen on a 6.9" phone and at 18-29% on a 13"
+# iPad -- the two do not overlap, so any single pair of numbers draws outside
+# the canvas on one of them. A swipe that lands outside still reports success,
+# which is how the phone set shipped with a signature pad holding one stray
+# tick mark.
+#
+# Placeholders rather than ${...}: Maestro validates a point against a literal
+# "N%,N%" at parse time, so an interpolated variable fails to parse.
 - swipe:
-    start: "30%,37%"
-    end: "38%,49%"
-    duration: 1200
+    start: "22%,__SIGN_TOP__%"
+    end: "28%,__SIGN_BOTTOM__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
 - swipe:
-    start: "38%,49%"
-    end: "46%,37%"
-    duration: 1200
+    start: "28%,__SIGN_BOTTOM__%"
+    end: "34%,__SIGN_TOP__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
 - swipe:
-    start: "46%,37%"
-    end: "54%,49%"
-    duration: 1200
+    start: "34%,__SIGN_TOP__%"
+    end: "40%,__SIGN_BOTTOM__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
 - swipe:
-    start: "54%,49%"
-    end: "62%,37%"
-    duration: 1200
+    start: "40%,__SIGN_BOTTOM__%"
+    end: "46%,__SIGN_TOP__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
+- swipe:
+    start: "46%,__SIGN_TOP__%"
+    end: "52%,__SIGN_BOTTOM__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
+- swipe:
+    start: "52%,__SIGN_BOTTOM__%"
+    end: "58%,__SIGN_TOP__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
+- swipe:
+    start: "58%,__SIGN_TOP__%"
+    end: "64%,__SIGN_BOTTOM__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
+- swipe:
+    start: "64%,__SIGN_BOTTOM__%"
+    end: "70%,__SIGN_TOP__%"
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 600
+- swipe:
+    start: "70%,__SIGN_TOP__%"
+    end: "76%,__SIGN_BOTTOM__%"
+    duration: 400
 - takeScreenshot: 02-vault
 - tapOn: ".*Save to Vault.*"
 - extendedWaitUntil:
