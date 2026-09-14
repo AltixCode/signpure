@@ -71,6 +71,11 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
             </View>
             <TouchableOpacity
               onPress={onClose}
+              // An icon-only button with no label reaches VoiceOver as
+              // "button" and nothing else, which on the one control that
+              // dismisses a paywall is the worst place for it.
+              accessibilityRole="button"
+              accessibilityLabel={t('cancel')}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               className="p-2 rounded-full" style={{ backgroundColor: theme.card }}
             >
