@@ -24,6 +24,9 @@ jobs:
       - name: TypeScript Typecheck
         run: npm run typecheck
 
+      - name: Unit Tests
+        run: npm test -- --ci
+
       - name: Validate Expo Configuration
         run: npx expo config --type public
 

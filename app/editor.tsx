@@ -29,6 +29,9 @@ import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
 import { ForwardChevron } from '../src/components/DirectionalIcons';
 import { useTheme } from '../src/theme/useTheme';
+import { useAdsStore } from '../src/store/adsStore';
+import { showInterstitial } from '../src/services/ads';
+import { shouldShowInterstitial } from '../src/services/adPolicy';
 
 type ToolType = 'signature' | 'date' | 'text' | 'check';
 
@@ -152,17 +155,39 @@ export default function EditorScreen() {
 
       incrementSignedCount();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await useAdsStore.getState().recordCompletion();
 
+      // The ad waits until the signed document has actually left the app -- behind the share
+      // sheet, or behind the confirmation when there is nothing to share to.
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(exportedPath);
+        await maybeShowInterstitial();
       } else {
-        Alert.alert(t('documentExported'), t('savedTo', { path: exportedPath }));
+        Alert.alert(t('documentExported'), t('savedTo', { path: exportedPath }), [
+          { text: t('ok'), onPress: () => void maybeShowInterstitial() },
+        ]);
       }
     } catch (err: any) {
       Alert.alert(t('exportError'), err?.message || t('exportErrorDesc'));
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const maybeShowInterstitial = async () => {
+    const { completions, lastInterstitialAt, markInterstitialShown } = useAdsStore.getState();
+    const decision = shouldShowInterstitial({
+      completions,
+      lastInterstitialAt,
+      now: Date.now(),
+      // Read at call time rather than captured: the user may have bought the upgrade from the
+      // paywall between opening this screen and finishing the work.
+      isPro: usePdfStore.getState().isPro,
+    });
+    if (!decision) return;
+    // Only a shown-and-dismissed ad resets the clock. Counting an unfilled request would
+    // suppress the next several ads for nothing.
+    if (await showInterstitial()) await markInterstitialShown();
   };
 
   const pageElements = placedElements.filter((e) => e.pageIndex === activePageIndex);

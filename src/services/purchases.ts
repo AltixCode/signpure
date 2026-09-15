@@ -1,14 +1,24 @@
-import { Platform } from "react-native";
+import { REVENUECAT_API_KEY } from '../config/env';
 import Purchases, { PurchasesPackage, LOG_LEVEL } from "react-native-purchases";
 
-const ENTITLEMENT_ID = "pro";
+/**
+ * The RevenueCat entitlement one purchase grants.
+ *
+ * The lookup key says "remove ads" because that is what the store product is named, but the
+ * entitlement carries the whole upgrade: no ads *and* no free-tier limits. Keeping the key as
+ * RevenueCat has it matters more than the name reading perfectly here -- renaming an
+ * entitlement means recreating it, and the SDK keys die with it.
+ */
+const ENTITLEMENT_ID = "remove_ads";
 
-const RC_API_KEY = Platform.select({
-  ios: process.env.EXPO_PUBLIC_RC_IOS_KEY || "appl_foHPlMuabYKiuPiMAEkiwHfcATV",
-  android:
-    process.env.EXPO_PUBLIC_RC_ANDROID_KEY ||
-    "goog_wGMjmCrRZVEpLLYQcxRiTlkXkMv",
-});
+/**
+ * The RevenueCat public SDK key, resolved by `config/env` so that the key lives in the build
+ * environment and nowhere else. Reading `process.env` here instead would have meant two
+ * places that decide what a key is called, and they had already drifted apart: this file read
+ * `EXPO_PUBLIC_RC_*` while CI injects `EXPO_PUBLIC_REVENUECAT_*`, so a CI build configured
+ * RevenueCat with nothing and every purchase failed silently.
+ */
+const RC_API_KEY = REVENUECAT_API_KEY;
 
 /**
  * Why the outcome is a tagged union rather than a boolean: a boolean cannot

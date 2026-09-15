@@ -43,6 +43,19 @@ concurrency:
   group: release-${{ github.repository }}
   cancel-in-progress: false
 
+
+# The AdMob and RevenueCat identifiers the build bakes in. Absent, the app falls back to
+# Google's test ad units and earns nothing, which nothing else in this pipeline notices.
+env:
+  EXPO_PUBLIC_ADMOB_IOS_APP_ID: ${{ secrets.EXPO_PUBLIC_ADMOB_IOS_APP_ID }}
+  EXPO_PUBLIC_ADMOB_ANDROID_APP_ID: ${{ secrets.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID }}
+  EXPO_PUBLIC_ADMOB_IOS_INTERSTITIAL: ${{ secrets.EXPO_PUBLIC_ADMOB_IOS_INTERSTITIAL }}
+  EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL: ${{ secrets.EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL }}
+  EXPO_PUBLIC_ADMOB_IOS_BANNER: ${{ secrets.EXPO_PUBLIC_ADMOB_IOS_BANNER }}
+  EXPO_PUBLIC_ADMOB_ANDROID_BANNER: ${{ secrets.EXPO_PUBLIC_ADMOB_ANDROID_BANNER }}
+  EXPO_PUBLIC_REVENUECAT_IOS_KEY: ${{ secrets.EXPO_PUBLIC_REVENUECAT_IOS_KEY }}
+  EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ secrets.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY }}
+
 jobs:
   build-ios:
     name: iOS Build & Package
@@ -70,6 +83,11 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
+
+
+      - name: Verify Release Identifiers
+
+        run: npm run check:release
 
       - name: Compute Dynamic Version & Bump app.json
         id: version
@@ -253,6 +271,11 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
+
+
+      - name: Verify Release Identifiers
+
+        run: npm run check:release
 
       - name: Compute Dynamic Version & Bump app.json
         id: version
