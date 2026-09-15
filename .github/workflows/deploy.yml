@@ -140,6 +140,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
         run: |
           mkdir -p build/output
           SCHEME=$(ls ios | grep .xcodeproj | head -n 1 | sed 's/.xcodeproj//')
@@ -148,6 +149,25 @@ jobs:
           : "${APP_STORE_CONNECT_API_KEY_CONTENT:?Missing APP_STORE_CONNECT_API_KEY_CONTENT}"
           : "${APP_STORE_CONNECT_API_KEY_ID:?Missing APP_STORE_CONNECT_API_KEY_ID}"
           : "${APP_STORE_CONNECT_API_KEY_ISSUER:?Missing APP_STORE_CONNECT_API_KEY_ISSUER}"
+
+          # A self-hosted runner started by launchd does not inherit the
+          # interactive session's keychain access, so `codesign` fails with
+          # `errSecInternalComponent` -- a message that names neither the
+          # keychain nor the key, and which looks like a broken certificate.
+          # Unlocking it and widening the partition list is what lets codesign
+          # use the private key without a UI prompt nobody is there to answer.
+          #
+          # Skipped when the secret is absent, so a runner whose keychain is
+          # already reachable is unaffected.
+          if [ -n "${MACOS_KEYCHAIN_PASSWORD:-}" ]; then
+            KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
+            security unlock-keychain -p "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+            security set-key-partition-list -S apple-tool:,apple:,codesign: \
+              -s -k "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null 2>&1 || true
+            echo "Keychain unlocked for codesign."
+          else
+            echo "::warning::MACOS_KEYCHAIN_PASSWORD is not set. If this archive fails with errSecInternalComponent, that is why."
+          fi
           AUTH_KEY="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
           printf '%s' "$APP_STORE_CONNECT_API_KEY_CONTENT" > "$AUTH_KEY"
           chmod 600 "$AUTH_KEY"
@@ -231,6 +251,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
         run: |
           : "${APP_STORE_CONNECT_API_KEY_CONTENT:?Missing APP_STORE_CONNECT_API_KEY_CONTENT}"
           : "${APP_STORE_CONNECT_API_KEY_ID:?Missing APP_STORE_CONNECT_API_KEY_ID}"
