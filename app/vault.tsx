@@ -18,9 +18,11 @@ import { PaywallModal } from '../src/components/PaywallModal';
 import { useSignatureRasterizer } from '../src/engine/signatureRasterizer';
 import { t } from '../src/i18n';
 import { useTheme } from '../src/theme/useTheme';
+import { useTabletColumn } from '../src/theme/useTabletColumn';
 
 export default function VaultScreen() {
   const theme = useTheme();
+  const tabletColumn = useTabletColumn();
   const router = useRouter();
   const { vaultSignatures, isPro, addVaultSignature, removeVaultSignature } = usePdfStore();
 
@@ -94,7 +96,7 @@ export default function VaultScreen() {
     <>
       {RasterizerPortal}
     <View className="flex-1 px-5 py-4" style={{ backgroundColor: theme.background }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 , ...tabletColumn}}>
         {/* Top Vault Status */}
         <View className="flex-row items-center justify-between mb-4 pb-3 border-b" style={{ borderColor: theme.cardBorder }}>
           <View className="flex-row items-center">

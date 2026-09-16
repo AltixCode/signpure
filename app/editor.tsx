@@ -29,6 +29,7 @@ import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
 import { ForwardChevron } from '../src/components/DirectionalIcons';
 import { useTheme } from '../src/theme/useTheme';
+import { useTabletColumn } from '../src/theme/useTabletColumn';
 import { useAdsStore } from '../src/store/adsStore';
 import { showInterstitial } from '../src/services/ads';
 import { shouldShowInterstitial } from '../src/services/adPolicy';
@@ -37,6 +38,7 @@ type ToolType = 'signature' | 'date' | 'text' | 'check';
 
 export default function EditorScreen() {
   const theme = useTheme();
+  const tabletColumn = useTabletColumn();
   const router = useRouter();
   const {
     document,
@@ -253,7 +255,7 @@ export default function EditorScreen() {
 
       {/* Document Interactive Page Canvas */}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' , ...tabletColumn}}
       >
         <PdfPageCanvas
           uri={document.uri}
