@@ -42,3 +42,8 @@ yarn-error.*
 dist/
 build/
 
+
+# env — local secrets and public SDK keys, never committed
+.env
+.env.local
+.env.*.local
