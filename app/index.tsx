@@ -19,6 +19,7 @@ import { PaywallModal } from '../src/components/PaywallModal';
 import { t } from '../src/i18n';
 import { ForwardArrow } from '../src/components/DirectionalIcons';
 import { useTheme } from '../src/theme/useTheme';
+import { useTabletColumn } from '../src/theme/useTabletColumn';
 import { AdBanner } from '../src/components/AdBanner';
 import { useAdsStore } from '../src/store/adsStore';
 import { showPrivacyOptionsForm } from '../src/services/ads';
@@ -29,6 +30,7 @@ export default function HomeScreen() {
   // states. It is absent everywhere else rather than shown as a dead control.
   const offerPrivacyOptions = useAdsStore((state) => state.consent.offerPrivacyOptions);
   const theme = useTheme();
+  const tabletColumn = useTabletColumn();
   const router = useRouter();
   const { document, isPro, documentsSignedCount, setDocument } = usePdfStore();
   const [loading, setLoading] = useState(false);
@@ -68,7 +70,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 px-5" style={{ backgroundColor: theme.background }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 , ...tabletColumn}}>
         {/* Header Hero */}
         <View className="mt-4 mb-5">
           <View className="inline-flex self-start bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full mb-3 flex-row items-center">
