@@ -55,7 +55,7 @@
     "build:prod:ios": "eas build --platform ios --profile production",
     "build:prod:android": "eas build --platform android --profile production",
     "test": "jest",
-    "check:release": "node scripts/check-ad-wiring.mjs && node scripts/check-paywall-copy.mjs && node scripts/check-locale-scripts.mjs && tsx scripts/check-release-config.ts"
+    "check:release": "node scripts/check-i18n.mjs && node scripts/check-ad-wiring.mjs && node scripts/check-paywall-copy.mjs && node scripts/check-locale-scripts.mjs && tsx scripts/check-release-config.ts"
   },
   "private": true
 }
