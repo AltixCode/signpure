@@ -101,10 +101,15 @@ export default function PaywallScreen() {
           <Text className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: theme.primary }}>
             {t('antiSubTitle')}
           </Text>
-          <Text className="text-base font-bold leading-snug" style={{ color: theme.text }}>
+          {/* Fixed light ink, because the gradient under it is fixed dark.
+              This card's background is hardcoded navy in BOTH appearances,
+              while `theme.text` flips to #0F172A in light -- dark text on a
+              dark navy card, a contrast ratio of about 1:1. A surface that does
+              not change with the appearance must not take ink that does. */}
+          <Text className="text-base font-bold leading-snug" style={{ color: '#F8FAFC' }}>
             {t('antiSubHeadline')}
           </Text>
-          <Text className="text-xs mt-2 leading-relaxed" style={{ color: theme.textSecondary }}>
+          <Text className="text-xs mt-2 leading-relaxed" style={{ color: 'rgba(226,232,240,0.85)' }}>
             {t('antiSubDesc')}
           </Text>
         </LinearGradient>
