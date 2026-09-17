@@ -34,6 +34,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     void useAdsStore.getState().hydrate();
+    // The vault is read from disk here, not in the vault screen: the free-tier
+    // counter it also carries gates the signing flow, which a user can reach
+    // without ever opening the vault.
+    void usePdfStore.getState().hydrateVault();
     initPurchases();
     // Ads start only once entitlement is known, and only for users who have not bought the
     // upgrade. Running the consent flow first would put a GDPR form -- and on iOS an ATT

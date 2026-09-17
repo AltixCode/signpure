@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import { readVault, writeVault } from '@/services/vaultFile';
+
 export interface VaultSignature {
   id: string;
   name: string;
@@ -50,10 +52,12 @@ interface PdfState {
   clearPlacedElements: () => void;
   setIsPro: (isPro: boolean) => void;
   incrementSignedCount: () => void;
+  /** Loads the vault from disk. Safe to call more than once. */
+  hydrateVault: () => Promise<void>;
   reset: () => void;
 }
 
-export const usePdfStore = create<PdfState>((set) => ({
+export const usePdfStore = create<PdfState>((set, get) => ({
   document: null,
   activePageIndex: 0,
   vaultSignatures: [],
@@ -68,14 +72,23 @@ export const usePdfStore = create<PdfState>((set) => ({
       placedElements: [],
     }),
   setActivePageIndex: (activePageIndex) => set({ activePageIndex }),
-  addVaultSignature: (sig) =>
-    set((state) => ({
-      vaultSignatures: [sig, ...state.vaultSignatures],
-    })),
-  removeVaultSignature: (id) =>
+  // Every vault mutation writes through to disk.
+  //
+  // This store kept nothing: a saved signature lived in memory and died with
+  // the process, while the screen showed "SAVED SIGNATURES (1)" with a creation
+  // date and the free tier advertised "1/1 Saved Signature". The signed-document
+  // counter sat here too, so the free allowance reset on every launch and the
+  // limit could never close.
+  addVaultSignature: (sig) => {
+    set((state) => ({ vaultSignatures: [sig, ...state.vaultSignatures] }));
+    void persistVault(get);
+  },
+  removeVaultSignature: (id) => {
     set((state) => ({
       vaultSignatures: state.vaultSignatures.filter((s) => s.id !== id),
-    })),
+    }));
+    void persistVault(get);
+  },
   addPlacedElement: (elem) =>
     set((state) => ({
       placedElements: [...state.placedElements, elem],
@@ -92,8 +105,19 @@ export const usePdfStore = create<PdfState>((set) => ({
     })),
   clearPlacedElements: () => set({ placedElements: [] }),
   setIsPro: (isPro) => set({ isPro }),
-  incrementSignedCount: () =>
-    set((state) => ({ documentsSignedCount: state.documentsSignedCount + 1 })),
+  incrementSignedCount: () => {
+    set((state) => ({ documentsSignedCount: state.documentsSignedCount + 1 }));
+    void persistVault(get);
+  },
+  hydrateVault: async () => {
+    const { vaultSignatures, documentsSignedCount } = await readVault();
+    // Merge rather than replace: a signature drawn before hydration finished
+    // would otherwise be thrown away by the load that follows it.
+    set((state) => ({
+      vaultSignatures: state.vaultSignatures.length ? state.vaultSignatures : vaultSignatures,
+      documentsSignedCount: Math.max(state.documentsSignedCount, documentsSignedCount),
+    }));
+  },
   reset: () =>
     set({
       document: null,
@@ -101,3 +125,9 @@ export const usePdfStore = create<PdfState>((set) => ({
       placedElements: [],
     }),
 }));
+
+/** Writes the current vault to disk. Fire and forget; `writeVault` swallows. */
+function persistVault(get: () => PdfState): Promise<void> {
+  const { vaultSignatures, documentsSignedCount } = get();
+  return writeVault({ vaultSignatures, documentsSignedCount });
+}
