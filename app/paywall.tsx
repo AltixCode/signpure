@@ -23,7 +23,7 @@ import { useTabletColumn } from '../src/theme/useTabletColumn';
 
 export default function PaywallScreen() {
   const theme = useTheme();
-  const tabletColumn = useTabletColumn();
+  const tabletColumn = useTabletColumn(640);
   const router = useRouter();
   const { ctaLabel, loading, errorMsg, handlePurchase, handleRestore } =
     usePaywall(() => router.back());
@@ -81,7 +81,7 @@ export default function PaywallScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={tabletColumn}>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ ...tabletColumn, flexGrow: 1, justifyContent: 'center' }}>
         {/* Anti-Subscription Card */}
         <LinearGradient
             colors={['rgba(23,37,84,0.8)', '#0F172A']}
