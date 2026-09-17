@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
   Fingerprint,
@@ -30,6 +30,22 @@ export default function VaultScreen() {
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  // The signature canvas and iOS's swipe-back gesture want the same drag.
+  //
+  // This screen is PUSHED, so a drag that starts near the left edge and moves
+  // right is interpreted as "go back" -- and a left-to-right stroke is how most
+  // people sign. Drawing a signature popped the screen, twice past the vault in
+  // one motion. Right-to-left drew normally, which is why it survived testing:
+  // whoever drew the test signature happened to sign backwards.
+  //
+  // The gesture is disabled only while the canvas is up. The header back button
+  // and the pad's own Cancel both still work, so no route out is lost -- and
+  // the gesture returns the moment the canvas closes.
+  const navigation = useNavigation();
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: !isDrawing });
+  }, [navigation, isDrawing]);
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   useEffect(() => {
