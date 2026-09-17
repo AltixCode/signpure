@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Linking,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -31,6 +32,19 @@ interface PaywallModalProps {
 
 export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) => {
   const theme = useTheme();
+  // On a tablet this stops being a bottom sheet and becomes a centred card.
+  //
+  // A sheet anchored to the bottom of a 13" iPad leaves more than half the
+  // display as dimmed backdrop above it, and the purchase -- the whole reason
+  // the sheet exists -- sits in the last third of the screen. The bottom
+  // anchor is a phone idiom: it puts the content within reach of a thumb.
+  // There is no thumb at this size.
+  const { width: screenWidth } = useWindowDimensions();
+  const isTablet = screenWidth >= 700;
+  const asCard = isTablet
+    ? { maxWidth: 640, width: '100%' as const, borderRadius: 24, borderTopWidth: 1 }
+    : null;
+
   const { ctaLabel, loading, errorMsg, handlePurchase, handleRestore } =
     usePaywall(onClose);
 
@@ -59,8 +73,8 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View className="flex-1 bg-black/80 justify-end">
-        <View className="border-t rounded-t-3xl p-6 max-h-[90%]" style={{ backgroundColor: theme.background, borderColor: theme.cardBorder }}>
+      <View className={`flex-1 bg-black/80 ${isTablet ? "justify-center items-center" : "justify-end"}`}>
+        <View className="border-t rounded-t-3xl p-6 max-h-[90%]" style={[{ backgroundColor: theme.background, borderColor: theme.cardBorder }, asCard]}>
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center gap-2">
