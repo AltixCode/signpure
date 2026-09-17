@@ -75,7 +75,16 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 px-5" style={{ backgroundColor: theme.background }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 , ...tabletColumn}}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 , ...tabletColumn,
+          // A fixed block, not a list that grows, so it is centred when there
+          // is slack. On a 13" iPad these screens sat at the top with a third
+          // or more of the display empty beneath them. Deliberately not applied
+          // to packpixel or gridhabit, whose home screens hold a list the user
+          // adds to -- centring a growing list leaves it floating with dead
+          // space above and below.
+          flexGrow: 1,
+          justifyContent: 'center',
+        }}>
         {/* Header Hero */}
         <View className="mt-4 mb-5">
           <View className="inline-flex self-start bg-blue-500/10 border border-blue-500/30 px-3 py-1 rounded-full mb-3 flex-row items-center">
