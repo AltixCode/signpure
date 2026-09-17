@@ -81,7 +81,16 @@ export default function PaywallScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ ...tabletColumn, flexGrow: 1, justifyContent: 'center' }}>
+      {/* The scroll area and the pinned CTA are ONE block, centred together.
+          Centring the scroll content alone was worse than the problem it
+          replaced: on this shape the CTA is pinned OUTSIDE the ScrollView, so
+          only the middle moved and a second void opened above the content.
+          Measured on a 13" iPad: header 11%, void 25%, content 25%, void 26%,
+          CTA 13% -- 51% empty in two slabs, against one 45% slab before.
+          Wrapping both and letting the scroll view hug its content keeps the
+          button attached to what it is buying. */}
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ ...tabletColumn }}>
         {/* Anti-Subscription Card */}
         <LinearGradient
             colors={['rgba(23,37,84,0.8)', '#0F172A']}
@@ -168,6 +177,7 @@ export default function PaywallScreen() {
           </TouchableOpacity>
         </View>
 
+      </View>
       </View>
     </View>
   );
