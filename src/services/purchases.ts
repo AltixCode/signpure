@@ -9,7 +9,26 @@ import Purchases, { PurchasesPackage, LOG_LEVEL } from "react-native-purchases";
  * RevenueCat has it matters more than the name reading perfectly here -- renaming an
  * entitlement means recreating it, and the SDK keys die with it.
  */
-const ENTITLEMENT_ID = "remove_ads";
+/**
+ * The RevenueCat entitlement one purchase grants.
+ *
+ * This was `"remove_ads"`, which is what 37 of the 44 projects in this portfolio
+ * use and is therefore what every one of these files was written to say. This
+ * app is not one of them: its RevenueCat project (proja69d625c) grants **`pro`**,
+ * verified against the live project on 2026-09-18 with
+ * `rc entitlements list --project-id proja69d625c`.
+ *
+ * So `entitlements.active["remove_ads"]` was always undefined. The purchase
+ * would have succeeded, the receipt would have been valid, App Store review
+ * would have passed -- and the app would have stayed locked, because no store
+ * gate can see an entitlement name. A paying customer with nothing unlocked is
+ * the only symptom.
+ *
+ * Six apps had this; the constant looked like all the others, which is exactly
+ * why it read as correct. If this is ever changed, check the live project
+ * rather than the neighbouring app.
+ */
+const ENTITLEMENT_ID = "pro";
 
 /**
  * The RevenueCat public SDK key, resolved by `config/env` so that the key lives in the build
