@@ -110,6 +110,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: config.name ?? 'SignPure',
     slug: config.slug ?? 'signpure',
     plugins: [
+      // RevenueCat's Android SDK pulls in Amazon Appstore support unconditionally
+      // (react-native-purchases -> purchases-hybrid-common -> purchases-store-amazon ->
+      // com.amazon.device:amazon-appstore-sdk), which made R8 emit thousands of
+      // warnings during release minification and crash minifyReleaseWithR8 with
+      // OutOfMemoryError: Metaspace -- see the plugin file for the full trace.
+      './plugins/withExcludeAmazonAppstore',
+
       ...basePlugins,
       [
         'react-native-google-mobile-ads',
