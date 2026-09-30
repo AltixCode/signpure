@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,10 @@ import {
   Alert,
   ActivityIndicator,
   GestureResponderEvent,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import * as Sharing from 'expo-sharing';
+} from "react-native";
+import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
+import * as Sharing from "expo-sharing";
 import {
   PenTool,
   Calendar,
@@ -19,22 +19,25 @@ import {
   Share2,
   ChevronLeft,
   Sparkles,
-} from 'lucide-react-native';
-import { usePdfStore } from '../src/store/usePdfStore';
-import { exportSignedPdf } from '../src/engine/pdfEngine';
-import { screenToPdfCoordinates, ViewportTransform } from '../src/engine/coordinateMath';
-import { PdfPageCanvas, CanvasGeometry } from '../src/components/PdfPageCanvas';
-import { FormFieldOverlay } from '../src/components/FormFieldOverlay';
-import { PaywallModal } from '../src/components/PaywallModal';
-import { t } from '../src/i18n';
-import { ForwardChevron } from '../src/components/DirectionalIcons';
-import { useTheme } from '../src/theme/useTheme';
-import { useTabletColumn } from '../src/theme/useTabletColumn';
-import { useAdsStore } from '../src/store/adsStore';
-import { showInterstitial } from '../src/services/ads';
-import { shouldShowInterstitial } from '../src/services/adPolicy';
+} from "lucide-react-native";
+import { usePdfStore } from "../src/store/usePdfStore";
+import { exportSignedPdf } from "../src/engine/pdfEngine";
+import {
+  screenToPdfCoordinates,
+  ViewportTransform,
+} from "../src/engine/coordinateMath";
+import { PdfPageCanvas, CanvasGeometry } from "../src/components/PdfPageCanvas";
+import { FormFieldOverlay } from "../src/components/FormFieldOverlay";
+import { PaywallModal } from "../src/components/PaywallModal";
+import { t } from "../src/i18n";
+import { ForwardChevron } from "../src/components/DirectionalIcons";
+import { useTheme } from "../src/theme/useTheme";
+import { useTabletColumn } from "../src/theme/useTabletColumn";
+import { useAdsStore } from "../src/store/adsStore";
+import { showInterstitial } from "../src/services/ads";
+import { shouldShowInterstitial } from "../src/services/adPolicy";
 
-type ToolType = 'signature' | 'date' | 'text' | 'check';
+type ToolType = "signature" | "date" | "text" | "check";
 
 export default function EditorScreen() {
   const theme = useTheme();
@@ -52,7 +55,7 @@ export default function EditorScreen() {
     incrementSignedCount,
   } = usePdfStore();
 
-  const [activeTool, setActiveTool] = useState<ToolType>('signature');
+  const [activeTool, setActiveTool] = useState<ToolType>("signature");
   const [geometry, setGeometry] = useState<CanvasGeometry | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [paywallVisible, setPaywallVisible] = useState(false);
@@ -67,7 +70,7 @@ export default function EditorScreen() {
   // ordinary guard path: arrive here with nothing loaded and the app dies
   // instead of bouncing home.
   useEffect(() => {
-    if (!document) router.replace('/');
+    if (!document) router.replace("/");
   }, [document, router]);
 
   if (!document) return null;
@@ -84,29 +87,29 @@ export default function EditorScreen() {
     const { locationX, locationY } = evt.nativeEvent;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    let content = '';
+    let content = "";
     let width = 120;
     let height = 40;
 
-    if (activeTool === 'signature') {
+    if (activeTool === "signature") {
       if (vaultSignatures.length > 0) {
         content = vaultSignatures[0].base64Png;
       } else {
-        Alert.alert(t('noSignatureYet'), t('noSignatureYetDesc'));
+        Alert.alert(t("noSignatureYet"), t("noSignatureYetDesc"));
         return;
       }
       width = 130;
       height = 50;
-    } else if (activeTool === 'date') {
-      content = new Date().toISOString().split('T')[0];
+    } else if (activeTool === "date") {
+      content = new Date().toISOString().split("T")[0];
       width = 90;
       height = 30;
-    } else if (activeTool === 'text') {
-      content = t('signatory');
+    } else if (activeTool === "text") {
+      content = t("signatory");
       width = 140;
       height = 30;
-    } else if (activeTool === 'check') {
-      content = '\u2713';
+    } else if (activeTool === "check") {
+      content = "\u2713";
       width = 30;
       height = 30;
     }
@@ -141,8 +144,17 @@ export default function EditorScreen() {
       id: `elem_${Date.now()}`,
       pageIndex: activePageIndex,
       type: activeTool,
-      x: Math.max(0, Math.min(anchor.x, geometry.pointWidth - sizeInPoints.width)),
-      y: Math.max(0, Math.min(anchor.y - sizeInPoints.height, geometry.pointHeight - sizeInPoints.height)),
+      x: Math.max(
+        0,
+        Math.min(anchor.x, geometry.pointWidth - sizeInPoints.width),
+      ),
+      y: Math.max(
+        0,
+        Math.min(
+          anchor.y - sizeInPoints.height,
+          geometry.pointHeight - sizeInPoints.height,
+        ),
+      ),
       width: sizeInPoints.width,
       height: sizeInPoints.height,
       content,
@@ -151,7 +163,7 @@ export default function EditorScreen() {
 
   const handleExport = async () => {
     if (placedElements.length === 0) {
-      Alert.alert(t('noSignaturesPlaced'), t('noSignaturesPlacedDesc'));
+      Alert.alert(t("noSignaturesPlaced"), t("noSignaturesPlacedDesc"));
       return;
     }
 
@@ -162,7 +174,7 @@ export default function EditorScreen() {
       const exportedPath = await exportSignedPdf(
         document.uri,
         placedElements,
-        `signed_${document.name}`
+        `signed_${document.name}`,
       );
 
       incrementSignedCount();
@@ -175,19 +187,22 @@ export default function EditorScreen() {
         await Sharing.shareAsync(exportedPath);
         await maybeShowInterstitial();
       } else {
-        Alert.alert(t('documentExported'), t('savedTo', { path: exportedPath }), [
-          { text: t('ok'), onPress: () => void maybeShowInterstitial() },
-        ]);
+        Alert.alert(
+          t("documentExported"),
+          t("savedTo", { path: exportedPath }),
+          [{ text: t("ok"), onPress: () => void maybeShowInterstitial() }],
+        );
       }
     } catch (err: any) {
-      Alert.alert(t('exportError'), err?.message || t('exportErrorDesc'));
+      Alert.alert(t("exportError"), err?.message || t("exportErrorDesc"));
     } finally {
       setIsExporting(false);
     }
   };
 
   const maybeShowInterstitial = async () => {
-    const { completions, lastInterstitialAt, markInterstitialShown } = useAdsStore.getState();
+    const { completions, lastInterstitialAt, markInterstitialShown } =
+      useAdsStore.getState();
     const decision = shouldShowInterstitial({
       completions,
       lastInterstitialAt,
@@ -202,25 +217,42 @@ export default function EditorScreen() {
     if (await showInterstitial()) await markInterstitialShown();
   };
 
-  const pageElements = placedElements.filter((e) => e.pageIndex === activePageIndex);
+  const pageElements = placedElements.filter(
+    (e) => e.pageIndex === activePageIndex,
+  );
 
   return (
-    <View className="flex-1 px-4 py-2" style={{ backgroundColor: theme.background }}>
+    <View
+      className="flex-1 px-4 py-2"
+      style={{ backgroundColor: theme.background }}
+    >
       {/* Top Header Controls: Page Pagination */}
-      <View className="flex-row items-center justify-between border px-4 py-2.5 rounded-2xl mb-3" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
+      <View
+        className="flex-row items-center justify-between border px-4 py-2.5 rounded-2xl mb-3"
+        style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}
+      >
         <View className="flex-1 mr-2">
-          <Text className="font-bold text-xs" style={{ color: theme.text }} numberOfLines={1}>
+          <Text
+            className="font-bold text-xs"
+            style={{ color: theme.text }}
+            numberOfLines={1}
+          >
             {document.name}
           </Text>
           <Text className="text-[10px]" style={{ color: theme.textSecondary }}>
-            {t('pageOf', { current: activePageIndex + 1, total: document.pageCount })}
+            {t("pageOf", {
+              current: activePageIndex + 1,
+              total: document.pageCount,
+            })}
           </Text>
         </View>
 
         {document.pageCount > 1 && (
           <View className="flex-row items-center gap-1">
             <TouchableOpacity
-              onPress={() => setActivePageIndex(Math.max(0, activePageIndex - 1))}
+              onPress={() =>
+                setActivePageIndex(Math.max(0, activePageIndex - 1))
+              }
               disabled={activePageIndex === 0}
               className="p-1.5 rounded-lg mr-1"
               style={{
@@ -232,7 +264,9 @@ export default function EditorScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() =>
-                setActivePageIndex(Math.min(document.pageCount - 1, activePageIndex + 1))
+                setActivePageIndex(
+                  Math.min(document.pageCount - 1, activePageIndex + 1),
+                )
               }
               disabled={activePageIndex === document.pageCount - 1}
               className="p-1.5 rounded-lg"
@@ -257,15 +291,37 @@ export default function EditorScreen() {
           ) : (
             <>
               <Share2 size={14} color={theme.onPrimary} />
-              <Text className="font-bold text-xs ml-1.5" style={{ color: theme.onPrimary }}>{t('export')}</Text>
+              <Text
+                className="font-bold text-xs ml-1.5"
+                style={{ color: theme.onPrimary }}
+              >
+                {t("export")}
+              </Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
+      {/* A tester asked for exactly this: nothing on screen said what a tap on the page
+          actually does. Shown only until the page has at least one placed element, so it
+          never talks over a document someone is already partway through. */}
+      {pageElements.length === 0 ? (
+        <Text
+          className="text-center text-xs py-1.5"
+          style={{ color: theme.textSecondary }}
+        >
+          {t("placementHint")}
+        </Text>
+      ) : null}
+
       {/* Document Interactive Page Canvas */}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' , ...tabletColumn}}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          ...tabletColumn,
+        }}
       >
         <PdfPageCanvas
           uri={document.uri}
@@ -287,86 +343,116 @@ export default function EditorScreen() {
       </ScrollView>
 
       {/* Bottom Tool Selector Ribbon */}
-      <View className="border p-2.5 rounded-2xl mt-2 flex-row justify-between items-center" style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}>
+      <View
+        className="border p-2.5 rounded-2xl mt-2 flex-row justify-between items-center"
+        style={{ backgroundColor: theme.card, borderColor: theme.cardBorder }}
+      >
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveTool('signature');
+            setActiveTool("signature");
           }}
           className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl mr-1"
           style={{
-            backgroundColor: activeTool === 'signature' ? theme.primary : theme.controlSurface,
+            backgroundColor:
+              activeTool === "signature" ? theme.primary : theme.controlSurface,
           }}
         >
-          <PenTool size={14} color={activeTool === 'signature' ? theme.onPrimary : theme.text} />
+          <PenTool
+            size={14}
+            color={activeTool === "signature" ? theme.onPrimary : theme.text}
+          />
           <Text
             className="text-xs font-bold ml-1.5"
-            style={{ color: activeTool === 'signature' ? theme.onPrimary : theme.text }}
+            style={{
+              color: activeTool === "signature" ? theme.onPrimary : theme.text,
+            }}
           >
-            {t('toolSign')}
+            {t("toolSign")}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveTool('date');
+            setActiveTool("date");
           }}
           className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl mx-1"
           style={{
-            backgroundColor: activeTool === 'date' ? theme.primary : theme.controlSurface,
+            backgroundColor:
+              activeTool === "date" ? theme.primary : theme.controlSurface,
           }}
         >
-          <Calendar size={14} color={activeTool === 'date' ? theme.onPrimary : theme.text} />
+          <Calendar
+            size={14}
+            color={activeTool === "date" ? theme.onPrimary : theme.text}
+          />
           <Text
             className="text-xs font-bold ml-1.5"
-            style={{ color: activeTool === 'date' ? theme.onPrimary : theme.text }}
+            style={{
+              color: activeTool === "date" ? theme.onPrimary : theme.text,
+            }}
           >
-            {t('toolDate')}
+            {t("toolDate")}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveTool('text');
+            setActiveTool("text");
           }}
           className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl mx-1"
           style={{
-            backgroundColor: activeTool === 'text' ? theme.primary : theme.controlSurface,
+            backgroundColor:
+              activeTool === "text" ? theme.primary : theme.controlSurface,
           }}
         >
-          <Type size={14} color={activeTool === 'text' ? theme.onPrimary : theme.text} />
+          <Type
+            size={14}
+            color={activeTool === "text" ? theme.onPrimary : theme.text}
+          />
           <Text
             className="text-xs font-bold ml-1.5"
-            style={{ color: activeTool === 'text' ? theme.onPrimary : theme.text }}
+            style={{
+              color: activeTool === "text" ? theme.onPrimary : theme.text,
+            }}
           >
-            {t('toolText')}
+            {t("toolText")}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveTool('check');
+            setActiveTool("check");
           }}
           className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl ml-1"
           style={{
-            backgroundColor: activeTool === 'check' ? theme.primary : theme.controlSurface,
+            backgroundColor:
+              activeTool === "check" ? theme.primary : theme.controlSurface,
           }}
         >
-          <CheckSquare size={14} color={activeTool === 'check' ? theme.onPrimary : theme.text} />
+          <CheckSquare
+            size={14}
+            color={activeTool === "check" ? theme.onPrimary : theme.text}
+          />
           <Text
             className="text-xs font-bold ml-1.5"
-            style={{ color: activeTool === 'check' ? theme.onPrimary : theme.text }}
+            style={{
+              color: activeTool === "check" ? theme.onPrimary : theme.text,
+            }}
           >
-            {t('toolCheck')}
+            {t("toolCheck")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Paywall Modal */}
-      <PaywallModal visible={paywallVisible} onClose={() => setPaywallVisible(false)} />
+      <PaywallModal
+        visible={paywallVisible}
+        onClose={() => setPaywallVisible(false)}
+      />
     </View>
   );
 }

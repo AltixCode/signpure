@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { readVault, writeVault } from '@/services/vaultFile';
+import { readVault, writeVault } from "@/services/vaultFile";
 
 export interface VaultSignature {
   id: string;
@@ -12,7 +12,7 @@ export interface VaultSignature {
 export interface PlacedElement {
   id: string;
   pageIndex: number;
-  type: 'signature' | 'date' | 'text' | 'check';
+  type: "signature" | "date" | "text" | "check";
   x: number; // Screen coordinate or PDF coordinate
   y: number;
   width: number;
@@ -49,6 +49,15 @@ interface PdfState {
   addPlacedElement: (elem: PlacedElement) => void;
   removePlacedElement: (id: string) => void;
   updatePlacedElementPosition: (id: string, x: number, y: number) => void;
+  /** A corner-handle resize moves `y` too — the anchor is the top edge, not the stored bottom-left corner. */
+  updatePlacedElementSize: (
+    id: string,
+    width: number,
+    height: number,
+    y: number,
+  ) => void;
+  /** Commits an edit made in the inline text/date editor back onto the placed element. */
+  updatePlacedElementContent: (id: string, content: string) => void;
   clearPlacedElements: () => void;
   setIsPro: (isPro: boolean) => void;
   incrementSignedCount: () => void;
@@ -100,7 +109,19 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   updatePlacedElementPosition: (id, x, y) =>
     set((state) => ({
       placedElements: state.placedElements.map((e) =>
-        e.id === id ? { ...e, x, y } : e
+        e.id === id ? { ...e, x, y } : e,
+      ),
+    })),
+  updatePlacedElementSize: (id, width, height, y) =>
+    set((state) => ({
+      placedElements: state.placedElements.map((e) =>
+        e.id === id ? { ...e, width, height, y } : e,
+      ),
+    })),
+  updatePlacedElementContent: (id, content) =>
+    set((state) => ({
+      placedElements: state.placedElements.map((e) =>
+        e.id === id ? { ...e, content } : e,
       ),
     })),
   clearPlacedElements: () => set({ placedElements: [] }),
@@ -114,8 +135,13 @@ export const usePdfStore = create<PdfState>((set, get) => ({
     // Merge rather than replace: a signature drawn before hydration finished
     // would otherwise be thrown away by the load that follows it.
     set((state) => ({
-      vaultSignatures: state.vaultSignatures.length ? state.vaultSignatures : vaultSignatures,
-      documentsSignedCount: Math.max(state.documentsSignedCount, documentsSignedCount),
+      vaultSignatures: state.vaultSignatures.length
+        ? state.vaultSignatures
+        : vaultSignatures,
+      documentsSignedCount: Math.max(
+        state.documentsSignedCount,
+        documentsSignedCount,
+      ),
     }));
   },
   reset: () =>
